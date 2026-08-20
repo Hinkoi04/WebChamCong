@@ -1,0 +1,29 @@
+# IDE / Editor configurations
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.settings/
+.project
+.classpath
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Java Spring Boot ignores
+ChamCong/target/
+ChamCong/build/
+ChamCong/.mvn/wrapper/maven-wrapper.jar
+
+# Node / React ignores
+react-app/node_modules/
+react-app/dist/
+react-app/.env.local
+react-app/.env.development.local
+react-app/.env.test.local
+react-app/.env.production.local
+
+# Logs
+*.log

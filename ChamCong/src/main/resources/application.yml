@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: attendance-saas
+  sql:
+    init:
+      mode: always
+  datasource:
+    url: jdbc:mysql://gateway01.ap-southeast-1.prod.aws.tidbcloud.com:4000/attendance_saas?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: 4MuZ4xB7AZaMJPA.root
+    password: thYm8pWX353ToZud
+  jpa:
+    hibernate:
+      ddl-auto: validate   # schema.sql is the source of truth; JPA only validates
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+app:
+  jwt:
+    secret: "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_AT_LEAST_256_BITS_LONG"
+    expiration-ms: 86400000   # 24h
+  cors:
+    allowed-origins: "http://localhost:5173,http://localhost:3000"
