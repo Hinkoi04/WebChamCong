@@ -53,6 +53,13 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    public List<AdminResponse> getAllAdmins() {
+        return adminRepository.findAll().stream()
+                .map(a -> modelMapper.map(a, AdminResponse.class))
+                .toList();
+    }
+
+    @Override
     public List<UserResponse> getAllOrganizations() {
         return userService.getAllUsers();
     }
@@ -61,5 +68,23 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public UserResponse updateOrganizationStatus(Long orgId, UserStatus status) {
         return userService.updateStatus(orgId, status);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long adminId, com.lvtn.chamcong.modules.user.dto.ChangePasswordRequest request) {
+        Admin admin = adminRepository.findById(adminId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy quản trị viên"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), admin.getPasswordHash())) {
+            throw new BadRequestException("Mật khẩu hiện tại không chính xác");
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), admin.getPasswordHash())) {
+            throw new BadRequestException("Mật khẩu mới không được trùng với mật khẩu hiện tại");
+        }
+
+        admin.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        adminRepository.save(admin);
     }
 }
