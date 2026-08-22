@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 
 import java.util.List;
 
@@ -59,6 +61,14 @@ public class StaffController {
             @PathVariable("orgId") Long orgId,
             @Valid @RequestBody FaceDataRequest request) {
         return ResponseEntity.ok(staffService.registerFace(orgId, request));
+    }
+
+    @PostMapping("/{id}/face-upload")
+    public ResponseEntity<FaceDataResponse> uploadAndRegisterFace(
+            @PathVariable("orgId") Long orgId,
+            @PathVariable("id") Long staffId,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        return ResponseEntity.ok(staffService.uploadAndRegisterFace(orgId, staffId, file));
     }
 
     @GetMapping("/{id}/faces")

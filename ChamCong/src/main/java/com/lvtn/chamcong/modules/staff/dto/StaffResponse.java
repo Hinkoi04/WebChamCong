@@ -20,7 +20,10 @@ public class StaffResponse {
     private String email;
     private String phone;
     private String department;
+    private Long departmentId;
     private String position;
+    private Long positionId;
+    private Boolean faceRegistered;
     private BigDecimal baseSalary;
     private StaffStatus status;
     private LocalDate hiredAt;

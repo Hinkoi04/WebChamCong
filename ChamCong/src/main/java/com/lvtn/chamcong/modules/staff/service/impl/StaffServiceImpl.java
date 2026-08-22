@@ -15,12 +15,21 @@ import com.lvtn.chamcong.modules.staff.repository.StaffRepository;
 import com.lvtn.chamcong.modules.staff.service.StaffService;
 import com.lvtn.chamcong.modules.user.entity.User;
 import com.lvtn.chamcong.modules.user.repository.UserRepository;
+import com.lvtn.chamcong.modules.position.entity.Position;
+import com.lvtn.chamcong.modules.position.repository.PositionRepository;
+import com.lvtn.chamcong.modules.department.entity.Department;
+import com.lvtn.chamcong.modules.department.repository.DepartmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import com.lvtn.chamcong.common.service.CloudinaryService;
+import com.lvtn.chamcong.common.service.AiService;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,7 +40,31 @@ public class StaffServiceImpl implements StaffService {
     private final StaffRepository staffRepository;
     private final FaceDataRepository faceDataRepository;
     private final UserRepository userRepository;
+    private final PositionRepository positionRepository;
+    private final DepartmentRepository departmentRepository;
     private final ModelMapper modelMapper;
+    private final CloudinaryService cloudinaryService;
+    private final AiService aiService;
+
+    private StaffResponse convertToResponse(Staff staff) {
+        StaffResponse response = modelMapper.map(staff, StaffResponse.class);
+        if (staff.getPosition() != null) {
+            response.setPositionId(staff.getPosition().getId());
+            response.setPosition(staff.getPosition().getName());
+        } else {
+            response.setPositionId(null);
+            response.setPosition(null);
+        }
+        if (staff.getDepartment() != null) {
+            response.setDepartmentId(staff.getDepartment().getId());
+            response.setDepartment(staff.getDepartment().getName());
+        } else {
+            response.setDepartmentId(null);
+            response.setDepartment(null);
+        }
+        response.setFaceRegistered(!faceDataRepository.findByStaffIdAndIsActiveTrue(staff.getId()).isEmpty());
+        return response;
+    }
 
     @Override
     @Transactional
@@ -47,8 +80,35 @@ public class StaffServiceImpl implements StaffService {
         staff.setUser(user);
         staff.setIsDeleted(false);
 
+        if (request.getPosition() != null && !request.getPosition().trim().isEmpty()) {
+            String posName = request.getPosition().trim();
+            Position position = positionRepository.findByUserIdAndName(userId, posName)
+                    .orElseGet(() -> {
+                        Position newPos = Position.builder()
+                                .user(user)
+                                .name(posName)
+                                .description("Tự động tạo")
+                                .build();
+                        return positionRepository.save(newPos);
+                    });
+            staff.setPosition(position);
+        } else {
+            staff.setPosition(null);
+        }
+
+        if (request.getDepartmentId() != null) {
+            Department department = departmentRepository.findById(request.getDepartmentId())
+                    .orElseThrow(() -> new NotFoundException("Không tìm thấy phòng ban"));
+            if (!department.getUser().getId().equals(userId)) {
+                throw new BadRequestException("Phòng ban không thuộc về tổ chức này");
+            }
+            staff.setDepartment(department);
+        } else {
+            staff.setDepartment(null);
+        }
+
         Staff savedStaff = staffRepository.save(staff);
-        return modelMapper.map(savedStaff, StaffResponse.class);
+        return convertToResponse(savedStaff);
     }
 
     @Override
@@ -72,14 +132,39 @@ public class StaffServiceImpl implements StaffService {
         staff.setFullName(request.getFullName());
         staff.setEmail(request.getEmail());
         staff.setPhone(request.getPhone());
-        staff.setDepartment(request.getDepartment());
-        staff.setPosition(request.getPosition());
+        if (request.getPosition() != null && !request.getPosition().trim().isEmpty()) {
+            String posName = request.getPosition().trim();
+            Position position = positionRepository.findByUserIdAndName(userId, posName)
+                    .orElseGet(() -> {
+                        Position newPos = Position.builder()
+                                .user(staff.getUser())
+                                .name(posName)
+                                .description("Tự động tạo")
+                                .build();
+                        return positionRepository.save(newPos);
+                    });
+            staff.setPosition(position);
+        } else {
+            staff.setPosition(null);
+        }
+
+        if (request.getDepartmentId() != null) {
+            Department department = departmentRepository.findById(request.getDepartmentId())
+                    .orElseThrow(() -> new NotFoundException("Không tìm thấy phòng ban"));
+            if (!department.getUser().getId().equals(userId)) {
+                throw new BadRequestException("Phòng ban không thuộc về tổ chức này");
+            }
+            staff.setDepartment(department);
+        } else {
+            staff.setDepartment(null);
+        }
+
         staff.setBaseSalary(request.getBaseSalary());
         staff.setStatus(request.getStatus());
         staff.setHiredAt(request.getHiredAt());
 
         Staff updatedStaff = staffRepository.save(staff);
-        return modelMapper.map(updatedStaff, StaffResponse.class);
+        return convertToResponse(updatedStaff);
     }
 
     @Override
@@ -107,13 +192,13 @@ public class StaffServiceImpl implements StaffService {
             throw new BadRequestException("Truy cập trái phép vào thông tin nhân viên");
         }
 
-        return modelMapper.map(staff, StaffResponse.class);
+        return convertToResponse(staff);
     }
 
     @Override
     public List<StaffResponse> getAllStaff(Long userId) {
         return staffRepository.findByUserIdAndIsDeletedFalse(userId).stream()
-                .map(staff -> modelMapper.map(staff, StaffResponse.class))
+                .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
 
@@ -140,6 +225,27 @@ public class StaffServiceImpl implements StaffService {
 
         FaceData saved = faceDataRepository.save(faceData);
         return modelMapper.map(saved, FaceDataResponse.class);
+    }
+
+    @Override
+    @Transactional
+    public FaceDataResponse uploadAndRegisterFace(Long userId, Long staffId, MultipartFile file) throws IOException {
+        String embeddingStr = aiService.extractFaceEmbedding(file);
+        // Upload ảnh trước, sau đó lưu DB — nếu DB thất bại thì rollback ảnh trên Cloudinary
+        String imageUrl = cloudinaryService.uploadFile(file);
+
+        try {
+            FaceDataRequest request = new FaceDataRequest();
+            request.setStaffId(staffId);
+            request.setImageUrl(imageUrl);
+            request.setFaceEmbedding(embeddingStr);
+
+            return registerFace(userId, request);
+        } catch (Exception e) {
+            // BUG-011 fix: Rollback — xóa ảnh orphan trên Cloudinary khi lưu DB thất bại
+            cloudinaryService.deleteFile(imageUrl);
+            throw e;
+        }
     }
 
     @Override

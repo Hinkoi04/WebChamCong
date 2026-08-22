@@ -32,10 +32,8 @@ public class StaffRequest {
     @Size(max = 20, message = "Số điện thoại không được vượt quá 20 ký tự")
     private String phone;
 
-    @Size(max = 100, message = "Phòng ban không được vượt quá 100 ký tự")
-    private String department;
+    private Long departmentId;
 
-    @Size(max = 100, message = "Chức vụ không được vượt quá 100 ký tự")
     private String position;
 
     @NotNull(message = "Lương cơ bản không được để trống")
