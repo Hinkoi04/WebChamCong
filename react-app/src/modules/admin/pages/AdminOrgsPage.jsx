@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../../../contexts/ToastContext';
 import { adminService } from '../services/adminService';
-import { Building2, UserPlus, Eye, Lock, Unlock, Check } from 'lucide-react';
+import { Building2, UserPlus, Eye, Lock, Unlock } from 'lucide-react';
+
 
 export default function AdminOrgsPage() {
   const { showToast } = useToast();

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../../../contexts/ToastContext';
 import { adminService } from '../services/adminService';
-import { UserPlus, Lock, Unlock, ShieldCheck, Shield } from 'lucide-react';
+import { UserPlus, Unlock, ShieldCheck, Shield } from 'lucide-react';
+
 
 export default function AdminAccountsPage() {
   const { showToast } = useToast();
