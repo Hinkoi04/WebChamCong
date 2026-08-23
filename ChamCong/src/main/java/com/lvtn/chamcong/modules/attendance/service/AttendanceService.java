@@ -11,4 +11,8 @@ public interface AttendanceService {
     AttendanceResponse checkIn(FaceCheckInRequest request);
     AttendanceResponse manualAttendance(Long userId, ManualAttendanceRequest request);
     List<AttendanceResponse> getAttendanceHistory(Long userId, Long staffId, LocalDate startDate, LocalDate endDate);
+    /** Quét khuôn mặt toàn org: tự nhận diện nhân viên không cần staffId */
+    AttendanceResponse faceScan(Long orgId, String base64Image);
+    AttendanceResponse faceScan(Long orgId, String base64Image, String action);
 }
+

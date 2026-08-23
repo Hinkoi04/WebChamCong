@@ -20,14 +20,19 @@ import com.lvtn.chamcong.modules.staff.repository.FaceDataRepository;
 import com.lvtn.chamcong.modules.staff.repository.StaffRepository;
 import com.lvtn.chamcong.modules.work_schedule.entity.WorkSchedule;
 import com.lvtn.chamcong.modules.work_schedule.repository.WorkScheduleRepository;
+import com.lvtn.chamcong.common.service.AiService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,6 +47,18 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final WorkScheduleRepository workScheduleRepository;
     private final AuditLogService auditLogService;
     private final ModelMapper modelMapper;
+    private final AiService aiService;
+    private final ObjectMapper objectMapper;
+
+    /** Helper: map Attendance → AttendanceResponse và điền thêm staffName, staffCode */
+    private AttendanceResponse toResponse(Attendance attendance) {
+        AttendanceResponse res = modelMapper.map(attendance, AttendanceResponse.class);
+        if (attendance.getStaff() != null) {
+            res.setStaffName(attendance.getStaff().getFullName());
+            res.setStaffCode(attendance.getStaff().getStaffCode());
+        }
+        return res;
+    }
 
     @Override
     @Transactional
@@ -49,62 +66,202 @@ public class AttendanceServiceImpl implements AttendanceService {
         Staff staff = staffRepository.findById(request.getStaffId())
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên"));
 
+        if (!staff.getUser().getId().equals(request.getOrgId())) {
+            throw new BadRequestException("Nhân viên không thuộc tổ chức này");
+        }
+
         if (staff.getStatus() != StaffStatus.ACTIVE || staff.getIsDeleted()) {
             throw new BadRequestException("Nhân viên không còn hoạt động hoặc đã thôi việc");
         }
 
-        // Simulate face similarity matching
-        List<FaceData> activeFaces = faceDataRepository.findByStaffIdAndIsActiveTrue(staff.getId());
-        if (activeFaces.isEmpty()) {
-            throw new BadRequestException("Nhân viên này chưa đăng ký mẫu khuôn mặt hoạt động");
-        }
-        // In real app: compare request.getCheckInImage() with activeFaces.get(0).getFaceEmbedding()
-        double similarity = 0.92; // Simulated matching result
-        if (similarity < 0.85) {
-            throw new BadRequestException("Nhận diện khuôn mặt thất bại: độ tương khớp thấp dưới ngưỡng quy định");
+        CheckInMethod method = CheckInMethod.FACE;
+        if ("MANUAL_CHECKIN".equals(request.getCheckInImage())) {
+            method = CheckInMethod.MANUAL;
+        } else {
+            List<FaceData> activeFaces = faceDataRepository.findByStaffIdAndIsActiveTrue(staff.getId());
+            if (activeFaces.isEmpty()) {
+                throw new BadRequestException("Nhân viên này chưa đăng ký mẫu khuôn mặt hoạt động");
+            }
+            
+            try {
+                String checkInEmbeddingStr = aiService.extractFaceEmbeddingBase64(request.getCheckInImage());
+                List<Double> checkInVector = objectMapper.readValue(checkInEmbeddingStr, new TypeReference<List<Double>>() {});
+                
+                boolean matched = false;
+                double bestSimilarity = 0.0;
+                
+                for (FaceData faceData : activeFaces) {
+                    List<Double> registeredVector = objectMapper.readValue(faceData.getFaceEmbedding(), new TypeReference<List<Double>>() {});
+                    double similarity = aiService.calculateCosineSimilarity(checkInVector, registeredVector);
+                    if (similarity > bestSimilarity) bestSimilarity = similarity;
+                    if (similarity >= 0.58) { matched = true; break; }
+                }
+                
+                if (!matched) {
+                    throw new BadRequestException(String.format("Nhận diện khuôn mặt thất bại (Độ giống cao nhất: %.2f%%)", bestSimilarity * 100));
+                }
+                
+            } catch (Exception e) {
+                if (e instanceof BadRequestException) throw (BadRequestException) e;
+                throw new BadRequestException("Lỗi trong quá trình nhận diện khuôn mặt: " + e.getMessage());
+            }
         }
 
+        return recordAttendance(staff, request.getCheckInImage(), method, request.getAction());
+    }
+
+    @Override
+    @Transactional
+    public AttendanceResponse faceScan(Long orgId, String base64Image) {
+        return faceScan(orgId, base64Image, "AUTO");
+    }
+
+    @Override
+    @Transactional
+    public AttendanceResponse faceScan(Long orgId, String base64Image, String action) {
+        // 1. Lấy tất cả face embeddings active của toàn org
+        List<FaceData> allOrgFaces = faceDataRepository.findByStaff_User_IdAndIsActiveTrue(orgId);
+        if (allOrgFaces.isEmpty()) {
+            throw new BadRequestException("Tổ chức này chưa có nhân viên nào đăng ký khuôn mặt");
+        }
+
+        // 2. Extract embedding từ ảnh chụp
+        List<Double> scanVector;
+        try {
+            String embeddingStr = aiService.extractFaceEmbeddingBase64(base64Image);
+            scanVector = objectMapper.readValue(embeddingStr, new TypeReference<List<Double>>() {});
+        } catch (Exception e) {
+            if (e instanceof BadRequestException) throw (BadRequestException) e;
+            throw new BadRequestException("Không tìm thấy khuôn mặt trong ảnh, vui lòng đứng gần camera hơn");
+        }
+
+        // 3. So sánh với từng embedding đã đăng ký → tìm nhân viên khớp nhất
+        FaceData bestMatch = null;
+        double bestSimilarity = 0.0;
+        final double THRESHOLD = 0.58;
+
+        for (FaceData faceData : allOrgFaces) {
+            try {
+                List<Double> registeredVector = objectMapper.readValue(
+                        faceData.getFaceEmbedding(), new TypeReference<List<Double>>() {});
+                double similarity = aiService.calculateCosineSimilarity(scanVector, registeredVector);
+                if (similarity > bestSimilarity) {
+                    bestSimilarity = similarity;
+                    bestMatch = faceData;
+                }
+            } catch (Exception ignored) {
+                // bỏ qua face data bị corrupt
+            }
+        }
+
+        if (bestMatch == null || bestSimilarity < THRESHOLD) {
+            throw new BadRequestException(
+                    String.format("Không nhận ra khuôn mặt (độ giống cao nhất: %.1f%%). Vui lòng thử lại.", bestSimilarity * 100));
+        }
+
+        // 4. Kiểm tra nhân viên còn active không
+        Staff staff = bestMatch.getStaff();
+        if (staff.getStatus() != StaffStatus.ACTIVE || staff.getIsDeleted()) {
+            throw new BadRequestException("Nhân viên " + staff.getFullName() + " không còn hoạt động");
+        }
+
+        // 5. Ghi nhận chấm công theo tab hành động
+        return recordAttendance(staff, base64Image, CheckInMethod.FACE, action);
+    }
+
+    /**
+     * Logic ghi nhận chấm công dùng chung cho checkIn() và faceScan().
+     * Hỗ trợ phân định rõ CHECK_IN và CHECK_OUT để tránh ghi nhầm / lặp.
+     */
+    @Transactional
+    private AttendanceResponse recordAttendance(Staff staff, String checkInImage, CheckInMethod method, String action) {
         LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
         WorkSchedule schedule = workScheduleRepository.findByUserIdAndIsDefaultTrue(staff.getUser().getId())
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy cấu hình ca làm việc mặc định cho tổ chức này"));
 
-        Attendance attendance = attendanceRepository.findByStaffIdAndWorkDate(staff.getId(), today)
+        Attendance attendance = attendanceRepository.findByStaffIdAndWorkDateForUpdate(staff.getId(), today)
                 .orElse(null);
 
-        if (attendance == null) {
-            // First scan: Check-in
-            attendance = Attendance.builder()
-                    .staff(staff)
-                    .workDate(today)
-                    .checkInTime(now)
-                    .checkInImage(request.getCheckInImage())
-                    .checkInMethod(CheckInMethod.FACE)
-                    .build();
+        String normalizedAction = (action == null || action.trim().isEmpty()) ? "AUTO" : action.trim().toUpperCase();
 
-            // Determine status
-            LocalTime checkInTimeOnly = now.toLocalTime();
-            LocalTime lateThreshold = schedule.getStartTime().plusMinutes(schedule.getLateGraceMinutes());
+        try {
+            if ("CHECK_IN".equals(normalizedAction)) {
+                if (attendance != null && attendance.getCheckInTime() != null) {
+                    throw new BadRequestException(String.format("Nhân viên %s đã Check-in hôm nay lúc %s rồi!",
+                            staff.getFullName(), attendance.getCheckInTime().format(timeFormatter)));
+                }
 
-            if (checkInTimeOnly.isAfter(lateThreshold)) {
-                attendance.setStatus(AttendanceStatus.LATE);
+                attendance = Attendance.builder()
+                        .staff(staff)
+                        .workDate(today)
+                        .checkInTime(now)
+                        .checkInImage(checkInImage)
+                        .checkInMethod(method)
+                        .status(AttendanceStatus.ON_TIME)
+                        .build();
+
+                LocalTime checkInTimeOnly = now.toLocalTime();
+                LocalTime lateThreshold = schedule.getStartTime().plusMinutes(schedule.getLateGraceMinutes());
+                attendance.setStatus(checkInTimeOnly.isAfter(lateThreshold)
+                        ? AttendanceStatus.LATE : AttendanceStatus.ON_TIME);
+
+            } else if ("CHECK_OUT".equals(normalizedAction)) {
+                if (attendance == null || attendance.getCheckInTime() == null) {
+                    throw new BadRequestException(String.format("Nhân viên %s chưa Check-in hôm nay, không thể Check-out!",
+                            staff.getFullName()));
+                }
+
+                if (attendance.getCheckOutTime() != null) {
+                    throw new BadRequestException(String.format("Nhân viên %s đã Check-out lúc %s hôm nay rồi!",
+                            staff.getFullName(), attendance.getCheckOutTime().format(timeFormatter)));
+                }
+
+                attendance.setCheckOutTime(now);
+                LocalTime checkOutTimeOnly = now.toLocalTime();
+                if (checkOutTimeOnly.isBefore(schedule.getEndTime())) {
+                    attendance.setStatus(attendance.getStatus() == AttendanceStatus.LATE
+                            ? AttendanceStatus.LATE_AND_EARLY_LEAVE : AttendanceStatus.EARLY_LEAVE);
+                }
+
             } else {
-                attendance.setStatus(AttendanceStatus.ON_TIME);
-            }
-        } else {
-            // Second scan: Check-out
-            attendance.setCheckOutTime(now);
+                // AUTO fallback
+                if (attendance == null) {
+                    attendance = Attendance.builder()
+                            .staff(staff)
+                            .workDate(today)
+                            .checkInTime(now)
+                            .checkInImage(checkInImage)
+                            .checkInMethod(method)
+                            .status(AttendanceStatus.ON_TIME)
+                            .build();
 
-            // Determine status if early leave
-            LocalTime checkOutTimeOnly = now.toLocalTime();
-            if (checkOutTimeOnly.isBefore(schedule.getEndTime())) {
-                attendance.setStatus(AttendanceStatus.EARLY_LEAVE);
+                    LocalTime checkInTimeOnly = now.toLocalTime();
+                    LocalTime lateThreshold = schedule.getStartTime().plusMinutes(schedule.getLateGraceMinutes());
+                    attendance.setStatus(checkInTimeOnly.isAfter(lateThreshold)
+                            ? AttendanceStatus.LATE : AttendanceStatus.ON_TIME);
+                } else if (attendance.getCheckOutTime() == null) {
+                    attendance.setCheckOutTime(now);
+                    LocalTime checkOutTimeOnly = now.toLocalTime();
+                    if (checkOutTimeOnly.isBefore(schedule.getEndTime())) {
+                        attendance.setStatus(attendance.getStatus() == AttendanceStatus.LATE
+                                ? AttendanceStatus.LATE_AND_EARLY_LEAVE : AttendanceStatus.EARLY_LEAVE);
+                    }
+                } else {
+                    throw new BadRequestException(String.format("Nhân viên %s đã hoàn thành cả Check-in (%s) và Check-out (%s) hôm nay!",
+                            staff.getFullName(),
+                            attendance.getCheckInTime().format(timeFormatter),
+                            attendance.getCheckOutTime().format(timeFormatter)));
+                }
             }
+
+            Attendance saved = attendanceRepository.save(attendance);
+            return toResponse(saved);
+        } catch (DataIntegrityViolationException e) {
+            throw new BadRequestException("Đã có dữ liệu chấm công cho nhân viên này hôm nay. Vui lòng thử lại.");
         }
-
-        Attendance saved = attendanceRepository.save(attendance);
-        return modelMapper.map(saved, AttendanceResponse.class);
     }
 
     @Override
@@ -117,7 +274,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             throw new BadRequestException("Truy cập trái phép vào thông tin nhân viên");
         }
 
-        Attendance attendance = attendanceRepository.findByStaffIdAndWorkDate(staff.getId(), request.getWorkDate())
+        Attendance attendance = attendanceRepository.findByStaffIdAndWorkDateForUpdate(staff.getId(), request.getWorkDate())
                 .orElse(null);
 
         String oldValueJson = "null";
@@ -142,32 +299,25 @@ public class AttendanceServiceImpl implements AttendanceService {
         String newValueJson = String.format("{\"checkInTime\":\"%s\",\"checkOutTime\":\"%s\",\"status\":\"%s\",\"note\":\"%s\"}",
                 saved.getCheckInTime(), saved.getCheckOutTime(), saved.getStatus(), saved.getNote());
 
-        // Log manual override to audit logs
-        auditLogService.log(
-                ActorType.USER,
-                userId,
-                AuditAction.UPDATE,
-                "attendances",
-                saved.getId(),
-                oldValueJson,
-                newValueJson,
-                "0.0.0.0"
-        );
+        auditLogService.log(ActorType.USER, userId, AuditAction.UPDATE, "attendances",
+                saved.getId(), oldValueJson, newValueJson, "0.0.0.0");
 
-        return modelMapper.map(saved, AttendanceResponse.class);
+        return toResponse(saved);
     }
 
     @Override
     public List<AttendanceResponse> getAttendanceHistory(Long userId, Long staffId, LocalDate startDate, LocalDate endDate) {
-        Staff staff = staffRepository.findById(staffId)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên"));
-
-        if (!staff.getUser().getId().equals(userId)) {
-            throw new BadRequestException("Truy cập trái phép vào thông tin nhân viên");
+        if (staffId != null) {
+            Staff staff = staffRepository.findById(staffId)
+                    .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên"));
+            if (!staff.getUser().getId().equals(userId)) {
+                throw new BadRequestException("Truy cập trái phép vào thông tin nhân viên");
+            }
+            return attendanceRepository.findByStaffIdAndWorkDateBetween(staffId, startDate, endDate).stream()
+                    .map(this::toResponse).collect(Collectors.toList());
         }
-
-        return attendanceRepository.findByStaffIdAndWorkDateBetween(staffId, startDate, endDate).stream()
-                .map(att -> modelMapper.map(att, AttendanceResponse.class))
-                .collect(Collectors.toList());
+        return attendanceRepository.findByStaff_User_IdAndWorkDateBetween(userId, startDate, endDate).stream()
+                .map(this::toResponse).collect(Collectors.toList());
     }
 }
+

@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 public class AttendanceResponse {
     private Long id;
     private Long staffId;
+    private String staffName;
+    private String staffCode;
     private LocalDate workDate;
     private LocalDateTime checkInTime;
     private LocalDateTime checkOutTime;
@@ -25,3 +27,4 @@ public class AttendanceResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
+
