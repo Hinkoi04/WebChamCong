@@ -34,6 +34,11 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAllOrganizations());
     }
 
+    @GetMapping("/stats/weekly-attendance")
+    public ResponseEntity<List<com.lvtn.chamcong.modules.admin.dto.AdminWeeklyStatResponse>> getWeeklyAttendanceStats() {
+        return ResponseEntity.ok(adminService.getWeeklyAttendanceStats());
+    }
+
     @GetMapping("/admins")
     public ResponseEntity<List<AdminResponse>> getAllAdmins() {
         return ResponseEntity.ok(adminService.getAllAdmins());

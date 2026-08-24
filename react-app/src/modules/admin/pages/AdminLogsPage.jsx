@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { adminService } from '../services/adminService';
 import { Search, RefreshCw } from 'lucide-react';
+import Pagination from '../../../components/Pagination';
 
 function fmtDate(str) {
   if (!str) return '—';
@@ -23,19 +24,25 @@ export default function AdminLogsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  const loadLogs = async () => {
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+
+  const loadLogs = React.useCallback(async () => {
     try {
       setLoading(true);
       const data = await adminService.getAuditLogs();
-      setLogs(data);
+      setLogs(data || []);
     } catch (err) {
       console.error('Không thể tải nhật ký hệ thống', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { loadLogs(); }, []);
+  useEffect(() => { 
+    loadLogs(); 
+  }, [loadLogs]);
 
   const shown = logs.filter(
     (l) =>
@@ -44,6 +51,8 @@ export default function AdminLogsPage() {
       (l.targetTable || '').toLowerCase().includes(search.toLowerCase()) ||
       (l.ipAddress || '').toLowerCase().includes(search.toLowerCase())
   );
+
+  const paginatedLogs = shown.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="space-y-6">
@@ -57,14 +66,21 @@ export default function AdminLogsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
               placeholder="Tìm theo hành động, loại actor..."
               className="bg-zinc-900/60 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-violet-500/50 w-64 transition-all"
             />
           </div>
           <button
-            onClick={loadLogs}
+            onClick={() => {
+              loadLogs();
+              setCurrentPage(1);
+            }}
             className="w-9 h-9 flex items-center justify-center rounded-xl border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors bg-zinc-900/60 cursor-pointer"
+            title="Tải lại"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -87,7 +103,7 @@ export default function AdminLogsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/40">
-                {shown.map((l) => (
+                {paginatedLogs.map((l) => (
                   <tr key={l.id} className="hover:bg-zinc-800/10 transition-colors">
                     <td className="px-5 py-4">
                       <span className={`text-xs font-bold font-mono ${l.actorType === 'ADMIN' ? 'text-violet-400' : 'text-blue-400'}`}>
@@ -117,6 +133,18 @@ export default function AdminLogsPage() {
             </table>
           )}
         </div>
+
+        {/* Pagination */}
+        {!loading && shown.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={shown.length}
+            pageSizeOptions={[15, 30, 50, 100]}
+            onPageChange={(p) => setCurrentPage(p)}
+            onPageSizeChange={(s) => setPageSize(s)}
+          />
+        )}
       </div>
     </div>
   );

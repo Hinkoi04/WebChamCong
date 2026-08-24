@@ -10,18 +10,21 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const [orgs, setOrgs] = useState([]);
   const [recentLogs, setRecentLogs] = useState([]);
+  const [weeklyStats, setWeeklyStats] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
-        const [orgData, logData] = await Promise.all([
+        const [orgData, logData, statData] = await Promise.all([
           adminService.getOrganizations(),
-          adminService.getAuditLogs()
+          adminService.getAuditLogs(),
+          adminService.getWeeklyAttendanceStats().catch(() => [])
         ]);
-        setOrgs(orgData);
-        setRecentLogs(logData.slice(0, 5));
+        setOrgs(orgData || []);
+        setRecentLogs((logData || []).slice(0, 5));
+        setWeeklyStats(statData || []);
       } catch (err) {
         console.error('Không thể tải dữ liệu dashboard', err);
       } finally {
@@ -68,13 +71,10 @@ export default function AdminDashboardPage() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-sm font-semibold text-zinc-100">Lượt chấm công toàn hệ thống</h3>
-              <p className="text-[11px] text-zinc-500 mt-0.5 font-mono">Thống kê tuần này: 18/08 – 24/08/2026</p>
+              <p className="text-[11px] text-zinc-500 mt-0.5 font-mono">Thống kê tuần này (Thứ 2 – Chủ Nhật)</p>
             </div>
-            <button className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-100 transition-colors bg-zinc-800/40 border border-zinc-800 px-2.5 py-1.5 rounded-lg">
-              <Download className="w-3.5 h-3.5" /> Xuất báo cáo
-            </button>
           </div>
-          <AdminAttendanceChart data={[]} />
+          <AdminAttendanceChart data={weeklyStats} />
           <div className="flex gap-5 mt-4">
             {[{ c: 'bg-emerald-400', l: 'Điểm danh thành công' }, { c: 'bg-red-400', l: 'Vắng / Chưa quét' }].map(({ c, l }) => (
               <div key={l} className="flex items-center gap-2 text-xs text-zinc-400">
@@ -128,13 +128,25 @@ export default function AdminDashboardPage() {
   );
 }
 
-function AdminAttendanceChart({ data }) {
+function AdminAttendanceChart({ data = [] }) {
   const [tip, setTip] = useState(null);
+  const chartData = data && data.length > 0 ? data : [
+    { day: 'T2', present: 0, absent: 0 },
+    { day: 'T3', present: 0, absent: 0 },
+    { day: 'T4', present: 0, absent: 0 },
+    { day: 'T5', present: 0, absent: 0 },
+    { day: 'T6', present: 0, absent: 0 },
+    { day: 'T7', present: 0, absent: 0 },
+    { day: 'CN', present: 0, absent: 0 }
+  ];
+
   const W = 100, H = 170, pL = 28, pB = 24, pT = 8, pR = 8;
   const iW = W - pL - pR, iH = H - pB - pT;
-  const max = 300; // max attendance capacity
-  const grids = [0, 50, 100, 150, 200, 250, 300];
-  const gW = iW / data.length, bW = gW * 0.28, gap = gW * 0.05;
+  const maxValues = chartData.map(d => (d.present || 0) + (d.absent || 0));
+  const highest = Math.max(...maxValues, 10);
+  const max = Math.ceil(highest / 10) * 10 || 50;
+  const grids = [0, Math.round(max * 0.25), Math.round(max * 0.5), Math.round(max * 0.75), max];
+  const gW = iW / chartData.length, bW = gW * 0.28, gap = gW * 0.05;
 
   return (
     <div className="relative select-none">
@@ -150,9 +162,12 @@ function AdminAttendanceChart({ data }) {
             </g>
           );
         })}
-        {data.map((d, i) => {
-          const cx = pL + i * gW + gW / 2, ph = (d.present / max) * iH, ah = (d.absent / max) * iH;
-          const px = cx - gap / 2 - bW, ax = cx + gap / 2;
+        {chartData.map((d, i) => {
+          const cx = pL + i * gW + gW / 2;
+          const ph = ((d.present || 0) / max) * iH;
+          const ah = ((d.absent || 0) / max) * iH;
+          const px = cx - gap / 2 - bW;
+          const ax = cx + gap / 2;
           return (
             <g
               key={i}
@@ -177,12 +192,12 @@ function AdminAttendanceChart({ data }) {
           className="pointer-events-none absolute z-10 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs shadow-2xl animate-[fadeInScale_0.15s_ease_both]"
           style={{ left: tip.x + 12, top: Math.max(4, tip.y - 64) }}
         >
-          <div className="font-bold text-zinc-100 border-b border-zinc-800 pb-1 mb-1.5">{tip.d.day}</div>
+          <div className="font-bold text-zinc-100 border-b border-zinc-800 pb-1 mb-1.5">{tip.d.day} ({tip.d.date || ''})</div>
           <div className="flex items-center gap-2 text-emerald-400">
             <span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" /> Quét mặt: <b>{tip.d.present} lượt</b>
           </div>
           <div className="flex items-center gap-2 text-red-400 mt-1">
-            <span className="w-2 h-2 rounded-sm bg-red-400 inline-block" /> Không quét: <b>{tip.d.absent} lượt</b>
+            <span className="w-2 h-2 rounded-sm bg-red-400 inline-block" /> Chưa quét: <b>{tip.d.absent} lượt</b>
           </div>
         </div>
       )}

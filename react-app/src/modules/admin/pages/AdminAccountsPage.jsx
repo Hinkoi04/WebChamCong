@@ -2,26 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { useToast } from '../../../contexts/ToastContext';
 import { adminService } from '../services/adminService';
 import { UserPlus, Unlock, ShieldCheck, Shield } from 'lucide-react';
-
+import Pagination from '../../../components/Pagination';
 
 export default function AdminAccountsPage() {
   const { showToast } = useToast();
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const loadAdmins = async () => {
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const loadAdmins = React.useCallback(async () => {
     try {
       setLoading(true);
       const data = await adminService.getAdmins();
       setAdmins(data);
     } catch (err) {
+      console.error(err);
       showToast('Không thể tải danh sách quản trị viên', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
-  useEffect(() => { loadAdmins(); }, []);
+  useEffect(() => { 
+    loadAdmins(); 
+  }, [loadAdmins]);
+
+  const paginatedAdmins = admins.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="space-y-6">
@@ -57,7 +66,7 @@ export default function AdminAccountsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/40">
-                {admins.map((a) => (
+                {paginatedAdmins.map((a) => (
                   <tr key={a.id} className="hover:bg-zinc-800/10 transition-colors group">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
@@ -103,6 +112,17 @@ export default function AdminAccountsPage() {
             </table>
           )}
         </div>
+
+        {/* Pagination */}
+        {!loading && admins.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={admins.length}
+            onPageChange={(p) => setCurrentPage(p)}
+            onPageSizeChange={(s) => setPageSize(s)}
+          />
+        )}
       </div>
     </div>
   );

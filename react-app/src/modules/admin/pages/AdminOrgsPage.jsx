@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../../../contexts/ToastContext';
 import { adminService } from '../services/adminService';
-import { Building2, UserPlus, Eye, Lock, Unlock } from 'lucide-react';
-
+import { Building2, UserPlus, Eye, Lock, Unlock, Check } from 'lucide-react';
+import Pagination from '../../../components/Pagination';
 
 export default function AdminOrgsPage() {
   const { showToast } = useToast();
@@ -10,21 +10,26 @@ export default function AdminOrgsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('Tất cả');
 
-  const loadOrgs = async () => {
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const loadOrgs = React.useCallback(async () => {
     try {
       setLoading(true);
       const data = await adminService.getOrganizations();
       setOrgs(data);
     } catch (err) {
+      console.error(err);
       showToast('Không thể tải danh sách tổ chức', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
     loadOrgs();
-  }, []);
+  }, [loadOrgs]);
 
   const handleStatusChange = async (id, newStatus, name) => {
     try {
@@ -46,6 +51,7 @@ export default function AdminOrgsPage() {
   };
 
   const shown = orgs.filter((o) => filter === 'Tất cả' || o.status === filter || o.plan === filter);
+  const paginatedOrgs = shown.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="space-y-6">
@@ -85,7 +91,10 @@ export default function AdminOrgsPage() {
         {['Tất cả', 'ACTIVE', 'PENDING', 'LOCKED'].map((tab) => (
           <button
             key={tab}
-            onClick={() => setFilter(tab)}
+            onClick={() => {
+              setFilter(tab);
+              setCurrentPage(1);
+            }}
             className={`px-4 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
               filter === tab ? 'bg-zinc-800 text-zinc-100 shadow-md border border-zinc-700/30' : 'text-zinc-400 hover:text-zinc-200'
             }`}
@@ -112,7 +121,7 @@ export default function AdminOrgsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/40">
-                {shown.map((o) => (
+                {paginatedOrgs.map((o) => (
                   <tr key={o.id} className="hover:bg-zinc-800/10 transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
@@ -202,6 +211,17 @@ export default function AdminOrgsPage() {
             </table>
           )}
         </div>
+
+        {/* Pagination */}
+        {!loading && shown.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={shown.length}
+            onPageChange={(p) => setCurrentPage(p)}
+            onPageSizeChange={(s) => setPageSize(s)}
+          />
+        )}
       </div>
     </div>
   );

@@ -7,6 +7,8 @@ import com.lvtn.chamcong.modules.user.entity.UserStatus;
 
 import java.util.List;
 
+import com.lvtn.chamcong.modules.admin.dto.AdminWeeklyStatResponse;
+
 public interface AdminService {
     AdminResponse login(AdminLoginRequest request);
     AdminResponse getProfile(Long adminId);
@@ -14,4 +16,5 @@ public interface AdminService {
     List<UserResponse> getAllOrganizations();
     UserResponse updateOrganizationStatus(Long orgId, UserStatus status);
     void changePassword(Long adminId, com.lvtn.chamcong.modules.user.dto.ChangePasswordRequest request);
+    List<AdminWeeklyStatResponse> getWeeklyAttendanceStats();
 }

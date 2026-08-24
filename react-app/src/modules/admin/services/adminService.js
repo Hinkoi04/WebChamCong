@@ -20,5 +20,9 @@ export const adminService = {
   changePassword: async (adminId, passwords) => {
     const res = await api.patch(`/api/admin/${adminId}/password`, passwords);
     return res.data;
+  },
+  getWeeklyAttendanceStats: async () => {
+    const res = await api.get('/api/admin/stats/weekly-attendance');
+    return res.data;
   }
 };
