@@ -58,9 +58,9 @@ export function ToastProvider({ children }) {
 
       {/* Confirmation Dialog */}
       {confirm && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center">
+        <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={hideConfirm} />
-          <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-80 shadow-2xl animate-[fadeInScale_0.2s_ease_both]">
+          <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-5 sm:p-6 w-full max-w-sm shadow-2xl animate-[fadeInScale_0.2s_ease_both]">
             <h3 className="text-sm font-semibold text-zinc-100">{confirm.title}</h3>
             <p className="text-xs text-zinc-400 mt-2 leading-relaxed">{confirm.desc}</p>
             <div className="flex gap-2 mt-5">

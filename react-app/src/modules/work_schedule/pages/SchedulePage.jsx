@@ -178,9 +178,9 @@ export default function SchedulePage() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-          <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-md shadow-2xl animate-[fadeInScale_0.2s_ease_both]">
+          <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-5 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl animate-[fadeInScale_0.2s_ease_both]">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-sm font-bold text-zinc-100">
                 {isEditing ? 'Cập nhật ca làm việc' : 'Thêm ca làm việc mới'}

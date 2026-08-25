@@ -33,10 +33,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-zinc-950 p-5">
-      <div className="w-full max-w-[440px] bg-zinc-900 border border-zinc-800 rounded-2xl p-10 shadow-2xl">
-        <h2 className="font-heading text-3xl font-bold text-center text-zinc-100 mb-2">FaceAttend</h2>
-        <p className="text-zinc-400 text-center text-sm mb-8">Hệ thống chấm công đa tổ chức</p>
+    <div className="flex items-center justify-center min-h-screen bg-zinc-950 p-4 sm:p-5">
+      <div className="w-full max-w-[440px] bg-zinc-900 border border-zinc-800 rounded-2xl p-6 sm:p-10 shadow-2xl">
+        <h2 className="font-heading text-2xl sm:text-3xl font-bold text-center text-zinc-100 mb-2">FaceAttend</h2>
+        <p className="text-zinc-400 text-center text-xs sm:text-sm mb-6 sm:mb-8">Hệ thống chấm công đa tổ chức</p>
 
         {error && (
           <div className="block w-full py-2.5 px-4 mb-5 text-sm font-semibold rounded-lg text-center bg-red-500/10 text-red-400 border border-red-500/20">
