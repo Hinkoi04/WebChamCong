@@ -17,7 +17,7 @@ SFACE_PATH = "face_recognition_sface_2021dec.onnx"
 YUNET_URL = "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx"
 SFACE_URL = "https://github.com/opencv/opencv_zoo/raw/main/models/face_recognition_sface/face_recognition_sface_2021dec.onnx"
 
-# Ensure ONNX models are downloaded on startup
+# Ensure ONNX models are available
 def ensure_models():
     if not os.path.exists(YUNET_PATH):
         print(f"Downloading YuNet model ({YUNET_PATH})...")
@@ -28,12 +28,9 @@ def ensure_models():
 
 ensure_models()
 
-# Initialize OpenCV AI detectors
-detector = cv2.FaceDetectorYN.create(YUNET_PATH, "", (320, 320), 0.5, 0.3, 5000)
+# Initialize OpenCV AI detectors (Ultra-lightweight ~40MB RAM)
+detector = cv2.FaceDetectorYN.create(YUNET_PATH, "", (320, 320), 0.4, 0.25, 5000)
 recognizer = cv2.FaceRecognizerSF.create(SFACE_PATH, "")
-
-# Fallback Haar Cascade
-haar_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
 @app.get("/health")
 def health_check():
@@ -85,42 +82,29 @@ async def extract_face(file: UploadFile = File(...)):
 
         _, faces = detector.detect(img)
         
-        best_face = None
-        if faces is not None and len(faces) > 0:
-            # Sort by confidence
-            faces = sorted(faces, key=lambda f: f[-1], reverse=True)
-            best_face = faces[0]
-            
-            fx, fy, fw, fh = int(best_face[0]), int(best_face[1]), int(best_face[2]), int(best_face[3])
-            confidence = float(best_face[-1])
-            
-            aligned_face = recognizer.alignCrop(img, best_face)
-            embedding = recognizer.feature(aligned_face)[0].tolist()
-        else:
-            # Fallback to Haar Cascade
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            haar_faces = haar_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(40, 40))
-            if len(haar_faces) == 0:
-                raise HTTPException(status_code=400, detail="Không tìm thấy khuôn mặt trong ảnh, vui lòng thử lại ảnh rõ nét hơn.")
-            
-            # Take largest Haar face
-            haar_faces = sorted(haar_faces, key=lambda b: b[2] * b[3], reverse=True)
-            fx, fy, fw, fh = haar_faces[0]
-            confidence = 0.85
-            
-            # Synthetic landmarks for SFace alignment
-            synthetic_face = np.array([
-                fx, fy, fw, fh,
-                fx + fw * 0.3, fy + fh * 0.35,  # left eye
-                fx + fw * 0.7, fy + fh * 0.35,  # right eye
-                fx + fw * 0.5, fy + fh * 0.55,  # nose
-                fx + fw * 0.35, fy + fh * 0.75, # left mouth
-                fx + fw * 0.65, fy + fh * 0.75, # right mouth
-                confidence
-            ], dtype=np.float32)
-            
-            aligned_face = recognizer.alignCrop(img, synthetic_face)
-            embedding = recognizer.feature(aligned_face)[0].tolist()
+        if faces is None or len(faces) == 0:
+            # Retry with smaller scale if high-res image
+            if max(h, w) > 1000:
+                scale = 800.0 / max(h, w)
+                resized = cv2.resize(img, (int(w * scale), int(h * scale)))
+                detector.setInputSize((resized.shape[1], resized.shape[0]))
+                _, faces_resized = detector.detect(resized)
+                if faces_resized is not None and len(faces_resized) > 0:
+                    faces = faces_resized
+                    faces[:, :4] = faces[:, :4] / scale
+
+        if faces is None or len(faces) == 0:
+            raise HTTPException(status_code=400, detail="Không tìm thấy khuôn mặt trong ảnh, vui lòng thử lại ảnh rõ nét hơn.")
+
+        # Sắp xếp lấy khuôn mặt có độ tin cậy cao nhất
+        faces = sorted(faces, key=lambda f: f[-1], reverse=True)
+        best_face = faces[0]
+        
+        fx, fy, fw, fh = int(best_face[0]), int(best_face[1]), int(best_face[2]), int(best_face[3])
+        confidence = float(best_face[-1])
+        
+        aligned_face = recognizer.alignCrop(img, best_face)
+        embedding = recognizer.feature(aligned_face)[0].tolist()
 
         cropped_image = crop_face_to_base64(file_location, fx, fy, fw, fh)
 
