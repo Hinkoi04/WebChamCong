@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface StaffRepository extends JpaRepository<Staff, Long> {
     List<Staff> findByUserIdAndIsDeletedFalse(Long userId);
+    List<Staff> findByUserIdAndIsDeletedTrue(Long userId);
     Optional<Staff> findByUserIdAndStaffCode(Long userId, String staffCode);
 }

@@ -34,10 +34,28 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAllOrganizations());
     }
 
+    @GetMapping("/stats/weekly-attendance")
+    public ResponseEntity<List<com.lvtn.chamcong.modules.admin.dto.AdminWeeklyStatResponse>> getWeeklyAttendanceStats() {
+        return ResponseEntity.ok(adminService.getWeeklyAttendanceStats());
+    }
+
+    @GetMapping("/admins")
+    public ResponseEntity<List<AdminResponse>> getAllAdmins() {
+        return ResponseEntity.ok(adminService.getAllAdmins());
+    }
+
     @PutMapping("/organizations/{id}/status")
     public ResponseEntity<UserResponse> updateOrganizationStatus(
             @PathVariable("id") Long id,
             @RequestParam("status") UserStatus status) {
         return ResponseEntity.ok(adminService.updateOrganizationStatus(id, status));
+    }
+
+    @PatchMapping("/{id}/password")
+    public ResponseEntity<Void> changePassword(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody com.lvtn.chamcong.modules.user.dto.ChangePasswordRequest request) {
+        adminService.changePassword(id, request);
+        return ResponseEntity.ok().build();
     }
 }

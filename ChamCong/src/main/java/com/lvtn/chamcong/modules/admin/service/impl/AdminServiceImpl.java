@@ -19,6 +19,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import com.lvtn.chamcong.modules.admin.dto.AdminWeeklyStatResponse;
+import com.lvtn.chamcong.modules.attendance.entity.Attendance;
+import com.lvtn.chamcong.modules.attendance.entity.AttendanceStatus;
+import com.lvtn.chamcong.modules.attendance.repository.AttendanceRepository;
+import com.lvtn.chamcong.modules.staff.repository.StaffRepository;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -26,6 +36,8 @@ public class AdminServiceImpl implements AdminService {
 
     private final AdminRepository adminRepository;
     private final UserService userService;
+    private final AttendanceRepository attendanceRepository;
+    private final StaffRepository staffRepository;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
     private final JwtTokenProvider tokenProvider;
@@ -53,6 +65,13 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    public List<AdminResponse> getAllAdmins() {
+        return adminRepository.findAll().stream()
+                .map(a -> modelMapper.map(a, AdminResponse.class))
+                .toList();
+    }
+
+    @Override
     public List<UserResponse> getAllOrganizations() {
         return userService.getAllUsers();
     }
@@ -61,5 +80,61 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public UserResponse updateOrganizationStatus(Long orgId, UserStatus status) {
         return userService.updateStatus(orgId, status);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long adminId, com.lvtn.chamcong.modules.user.dto.ChangePasswordRequest request) {
+        Admin admin = adminRepository.findById(adminId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy quản trị viên"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), admin.getPasswordHash())) {
+            throw new BadRequestException("Mật khẩu hiện tại không chính xác");
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), admin.getPasswordHash())) {
+            throw new BadRequestException("Mật khẩu mới không được trùng với mật khẩu hiện tại");
+        }
+
+        admin.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        adminRepository.save(admin);
+    }
+
+    @Override
+    public List<AdminWeeklyStatResponse> getWeeklyAttendanceStats() {
+        LocalDate today = LocalDate.now();
+        LocalDate monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate sunday = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+
+        List<Attendance> attendances = attendanceRepository.findByWorkDateBetween(monday, sunday);
+        long totalActiveStaff = staffRepository.count();
+
+        String[] dayLabels = {"T2", "T3", "T4", "T5", "T6", "T7", "CN"};
+        List<AdminWeeklyStatResponse> result = new ArrayList<>();
+
+        for (int i = 0; i < 7; i++) {
+            LocalDate date = monday.plusDays(i);
+            long presentCount = attendances.stream()
+                    .filter(a -> a.getWorkDate().equals(date) &&
+                            (a.getStatus() == AttendanceStatus.ON_TIME ||
+                             a.getStatus() == AttendanceStatus.LATE ||
+                             a.getStatus() == AttendanceStatus.EARLY_LEAVE ||
+                             a.getStatus() == AttendanceStatus.LATE_AND_EARLY_LEAVE))
+                    .count();
+
+            long absentCount = Math.max(0, totalActiveStaff - presentCount);
+            if (date.isAfter(today)) {
+                absentCount = 0;
+            }
+
+            result.add(AdminWeeklyStatResponse.builder()
+                    .day(dayLabels[i])
+                    .date(date)
+                    .present(presentCount)
+                    .absent(absentCount)
+                    .build());
+        }
+
+        return result;
     }
 }

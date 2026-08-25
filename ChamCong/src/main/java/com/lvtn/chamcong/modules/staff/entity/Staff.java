@@ -41,11 +41,13 @@ public class Staff {
     @Column(length = 20)
     private String phone;
 
-    @Column(length = 100)
-    private String department;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private com.lvtn.chamcong.modules.department.entity.Department department;
 
-    @Column(length = 100)
-    private String position;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "position_id")
+    private com.lvtn.chamcong.modules.position.entity.Position position;
 
     @Column(name = "base_salary", nullable = false, precision = 15, scale = 2)
     private BigDecimal baseSalary = BigDecimal.ZERO;

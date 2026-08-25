@@ -50,6 +50,21 @@ CREATE TABLE IF NOT EXISTS work_schedules (
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
+-- 9. positions - Danh mục chức vụ của từng tổ chức
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS positions (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id         BIGINT NOT NULL,
+    name            VARCHAR(100) NOT NULL,
+    description     VARCHAR(255),
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_position_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_position_name_per_org (user_id, name),
+    INDEX idx_position_user (user_id)
+) ENGINE=InnoDB;
+
+-- ------------------------------------------------------------
 -- 4. staffs - Nhan vien thuoc 1 to chuc
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS staffs (
@@ -60,7 +75,7 @@ CREATE TABLE IF NOT EXISTS staffs (
     email           VARCHAR(150),
     phone           VARCHAR(20),
     department      VARCHAR(100),
-    position        VARCHAR(100),
+    position_id     BIGINT,
     base_salary     DECIMAL(15,2) NOT NULL DEFAULT 0,
     status          ENUM('ACTIVE','LOCKED','RESIGNED') NOT NULL DEFAULT 'ACTIVE',
     is_deleted      BOOLEAN NOT NULL DEFAULT FALSE,
@@ -68,10 +83,13 @@ CREATE TABLE IF NOT EXISTS staffs (
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_staff_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_staff_position FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE SET NULL,
     UNIQUE KEY uq_staff_code_per_org (user_id, staff_code),
     INDEX idx_staff_user (user_id),
+    INDEX idx_staff_position (position_id),
     INDEX idx_staff_status (status)
 ) ENGINE=InnoDB;
+
 
 -- ------------------------------------------------------------
 -- 5. face_data - Vector khuon mat dang ky
@@ -97,7 +115,7 @@ CREATE TABLE IF NOT EXISTS attendances (
     work_date           DATE NOT NULL,
     check_in_time       DATETIME,
     check_out_time      DATETIME,
-    check_in_image      VARCHAR(500),
+    check_in_image      MEDIUMTEXT,
     check_in_method     ENUM('FACE','MANUAL') NOT NULL DEFAULT 'FACE',
     status              ENUM('ON_TIME','LATE','EARLY_LEAVE','ABSENT','LEAVE') NOT NULL DEFAULT 'ON_TIME',
     note                VARCHAR(255),
@@ -156,3 +174,30 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 INSERT INTO admins (id, username, password_hash, full_name, role)
 VALUES (1, 'superadmin', '$2a$10$7EqJtq98hPqEX7fNZaFWoOa2s7c9U2v3rvUXqf9y8w5wq6y1w3aFa', 'Super Admin', 'SUPER_ADMIN')
 ON DUPLICATE KEY UPDATE username=username;
+
+-- ------------------------------------------------------------
+-- Migration: Safely add position_id to staffs if table already exists
+-- ------------------------------------------------------------
+ALTER TABLE staffs ADD COLUMN IF NOT EXISTS position_id BIGINT;
+ALTER TABLE staffs ADD CONSTRAINT fk_staff_position FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE SET NULL;
+
+-- ------------------------------------------------------------
+-- 10. departments - Danh muc phong ban cua tung to chuc
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS departments (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id         BIGINT NOT NULL,
+    name            VARCHAR(100) NOT NULL,
+    description     VARCHAR(255),
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_department_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_department_name_per_org (user_id, name),
+    INDEX idx_department_user (user_id)
+) ENGINE=InnoDB;
+
+ALTER TABLE staffs ADD COLUMN IF NOT EXISTS department_id BIGINT;
+ALTER TABLE staffs ADD CONSTRAINT fk_staff_department FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL;
+
+ALTER TABLE attendances MODIFY COLUMN check_in_image MEDIUMTEXT;
+

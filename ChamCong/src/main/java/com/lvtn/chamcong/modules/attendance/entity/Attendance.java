@@ -37,7 +37,8 @@ public class Attendance {
     @Column(name = "check_out_time")
     private LocalDateTime checkOutTime;
 
-    @Column(name = "check_in_image", length = 500)
+    @Lob
+    @Column(name = "check_in_image", columnDefinition = "MEDIUMTEXT")
     private String checkInImage;
 
     @Enumerated(EnumType.STRING)

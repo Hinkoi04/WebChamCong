@@ -30,4 +30,19 @@ public class UserController {
     public ResponseEntity<UserResponse> getProfile(@PathVariable("id") Long id) {
         return ResponseEntity.ok(userService.getProfile(id));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponse> updateProfile(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody com.lvtn.chamcong.modules.user.dto.UserUpdateRequest request) {
+        return ResponseEntity.ok(userService.updateProfile(id, request));
+    }
+
+    @PatchMapping("/{id}/password")
+    public ResponseEntity<Void> changePassword(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody com.lvtn.chamcong.modules.user.dto.ChangePasswordRequest request) {
+        userService.changePassword(id, request);
+        return ResponseEntity.ok().build();
+    }
 }

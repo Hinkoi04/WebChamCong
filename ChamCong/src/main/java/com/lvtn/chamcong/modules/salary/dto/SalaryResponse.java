@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 public class SalaryResponse {
     private Long id;
     private Long staffId;
+    private String staffCode;
+    private String staffName;
     private Integer month;
     private Integer year;
     private BigDecimal baseSalary;
