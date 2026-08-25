@@ -24,12 +24,17 @@ import java.util.stream.Collectors;
 import com.lvtn.chamcong.modules.user.dto.UserUpdateRequest;
 
 
+import com.lvtn.chamcong.modules.work_schedule.entity.WorkSchedule;
+import com.lvtn.chamcong.modules.work_schedule.repository.WorkScheduleRepository;
+import java.time.LocalTime;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final WorkScheduleRepository workScheduleRepository;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
     private final JwtTokenProvider tokenProvider;
@@ -46,6 +51,19 @@ public class UserServiceImpl implements UserService {
         user.setStatus(UserStatus.ACTIVE); // Auto-activate for ease of use in MVP
 
         User savedUser = userRepository.save(user);
+
+        // Tự động khởi tạo Ca làm việc mặc định cho tổ chức mới
+        WorkSchedule defaultSchedule = WorkSchedule.builder()
+                .user(savedUser)
+                .name("Ca Hành Chính Chuẩn")
+                .startTime(LocalTime.of(8, 0))
+                .endTime(LocalTime.of(17, 0))
+                .lateGraceMinutes(15)
+                .standardDaysPerMonth(26)
+                .isDefault(true)
+                .build();
+        workScheduleRepository.save(defaultSchedule);
+
         return modelMapper.map(savedUser, UserResponse.class);
     }
 

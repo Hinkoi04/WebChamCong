@@ -18,5 +18,13 @@ public interface StaffService {
 
     FaceDataResponse registerFace(Long userId, FaceDataRequest request);
     FaceDataResponse uploadAndRegisterFace(Long userId, Long staffId, MultipartFile file) throws IOException;
+    FaceDataResponse uploadAndRegisterFace(Long userId, Long staffId, MultipartFile file, boolean replace) throws IOException;
     List<FaceDataResponse> getFaceDataList(Long userId, Long staffId);
+
+    // Trash methods
+    List<StaffResponse> getTrashStaff(Long userId);
+    StaffResponse restoreStaff(Long userId, Long staffId);
+    void permanentDeleteStaff(Long userId, Long staffId);
+    void restoreAllTrash(Long userId);
+    void emptyTrash(Long userId);
 }

@@ -1,4 +1,6 @@
+# ==========================================
 # IDE / Editor configurations
+# ==========================================
 .idea/
 .vscode/
 *.iml
@@ -7,23 +9,88 @@
 .settings/
 .project
 .classpath
+react-app/package-lock.json
+react-app/package.json
 
-# OS files
+
+# ==========================================
+# OS generated files
+# ==========================================
 .DS_Store
 Thumbs.db
+ehthumbs.db
+[Nn]on-repo/
 
-# Java Spring Boot ignores
+# ==========================================
+# Java / Spring Boot ignores
+# ==========================================
 ChamCong/target/
+**/target/
 ChamCong/build/
-ChamCong/.mvn/wrapper/maven-wrapper.jar
+**/build/
+*.class
+ChamCong/.env
+**/.env.local
+**/.env.*.local
+ChamCong/pom.xml
 
-# Node / React ignores
+# ==========================================
+# Python / Face Service ignores
+# ==========================================
+face-service/venv/
+**/venv/
+**/.venv/
+**/env/
+**/ENV/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# DeepFace & Temporary image files
+temp_*
+**/temp_*
+.deepface/
+**/.deepface/
+weights/
+*.h5
+
+# ==========================================
+# Node / React / Vite ignores
+# ==========================================
 react-app/node_modules/
+**/node_modules/
 react-app/dist/
+**/dist/
+react-app/.env
 react-app/.env.local
 react-app/.env.development.local
 react-app/.env.test.local
 react-app/.env.production.local
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Logs
+# ==========================================
+# Logs & Docs
+# ==========================================
 *.log
+docx.txt
+postman_collection.json

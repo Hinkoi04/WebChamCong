@@ -19,6 +19,8 @@ import com.lvtn.chamcong.modules.position.entity.Position;
 import com.lvtn.chamcong.modules.position.repository.PositionRepository;
 import com.lvtn.chamcong.modules.department.entity.Department;
 import com.lvtn.chamcong.modules.department.repository.DepartmentRepository;
+import com.lvtn.chamcong.modules.attendance.repository.AttendanceRepository;
+import com.lvtn.chamcong.modules.salary.repository.SalaryRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -26,11 +28,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import com.lvtn.chamcong.common.service.CloudinaryService;
 import com.lvtn.chamcong.common.service.AiService;
+import com.lvtn.chamcong.common.service.FaceVectorCacheService;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import com.lvtn.chamcong.security.SecurityUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -42,9 +47,12 @@ public class StaffServiceImpl implements StaffService {
     private final UserRepository userRepository;
     private final PositionRepository positionRepository;
     private final DepartmentRepository departmentRepository;
+    private final AttendanceRepository attendanceRepository;
+    private final SalaryRepository salaryRepository;
     private final ModelMapper modelMapper;
     private final CloudinaryService cloudinaryService;
     private final AiService aiService;
+    private final FaceVectorCacheService faceVectorCacheService;
 
     private StaffResponse convertToResponse(Staff staff) {
         StaffResponse response = modelMapper.map(staff, StaffResponse.class);
@@ -69,6 +77,7 @@ public class StaffServiceImpl implements StaffService {
     @Override
     @Transactional
     public StaffResponse createStaff(Long userId, StaffRequest request) {
+        SecurityUtils.validateTenantAccess(userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy thông tin tổ chức"));
 
@@ -114,6 +123,7 @@ public class StaffServiceImpl implements StaffService {
     @Override
     @Transactional
     public StaffResponse updateStaff(Long userId, Long staffId, StaffRequest request) {
+        SecurityUtils.validateTenantAccess(userId);
         Staff staff = staffRepository.findById(staffId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên"));
 
@@ -159,17 +169,28 @@ public class StaffServiceImpl implements StaffService {
             staff.setDepartment(null);
         }
 
-        staff.setBaseSalary(request.getBaseSalary());
-        staff.setStatus(request.getStatus());
-        staff.setHiredAt(request.getHiredAt());
+        if (request.getBaseSalary() != null) {
+            staff.setBaseSalary(request.getBaseSalary());
+        }
+        if (request.getStatus() != null) {
+            staff.setStatus(request.getStatus());
+        }
+        if (request.getHiredAt() != null) {
+            staff.setHiredAt(request.getHiredAt());
+        }
 
         Staff updatedStaff = staffRepository.save(staff);
+
+        // Cập nhật face vector cache khi có thay đổi trạng thái nhân viên
+        faceVectorCacheService.invalidate(userId);
+
         return convertToResponse(updatedStaff);
     }
 
     @Override
     @Transactional
     public void deleteStaff(Long userId, Long staffId) {
+        SecurityUtils.validateTenantAccess(userId);
         Staff staff = staffRepository.findById(staffId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên"));
 
@@ -179,12 +200,15 @@ public class StaffServiceImpl implements StaffService {
 
         // Soft delete
         staff.setIsDeleted(true);
-        staff.setStatus(StaffStatus.RESIGNED);
         staffRepository.save(staff);
+
+        // Invalidate face vector cache for this org
+        faceVectorCacheService.invalidate(userId);
     }
 
     @Override
     public StaffResponse getStaffById(Long userId, Long staffId) {
+        SecurityUtils.validateTenantAccess(userId);
         Staff staff = staffRepository.findById(staffId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên"));
 
@@ -197,6 +221,7 @@ public class StaffServiceImpl implements StaffService {
 
     @Override
     public List<StaffResponse> getAllStaff(Long userId) {
+        SecurityUtils.validateTenantAccess(userId);
         return staffRepository.findByUserIdAndIsDeletedFalse(userId).stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
@@ -205,6 +230,12 @@ public class StaffServiceImpl implements StaffService {
     @Override
     @Transactional
     public FaceDataResponse registerFace(Long userId, FaceDataRequest request) {
+        SecurityUtils.validateTenantAccess(userId);
+        return registerFaceInternal(userId, request, true);
+    }
+
+    private FaceDataResponse registerFaceInternal(Long userId, FaceDataRequest request, boolean replace) {
+        SecurityUtils.validateTenantAccess(userId);
         Staff staff = staffRepository.findById(request.getStaffId())
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên"));
 
@@ -212,27 +243,51 @@ public class StaffServiceImpl implements StaffService {
             throw new BadRequestException("Truy cập trái phép vào thông tin nhân viên");
         }
 
-        // Deactivate previous face vectors
-        List<FaceData> activeFaces = faceDataRepository.findByStaffIdAndIsActiveTrue(staff.getId());
-        for (FaceData face : activeFaces) {
-            face.setIsActive(false);
-            faceDataRepository.save(face);
+        // Nếu replace = true (ví dụ Bước 1 trong quy trình 5 góc), vô hiệu hóa các vector cũ
+        if (replace) {
+            List<FaceData> activeFaces = faceDataRepository.findByStaffIdAndIsActiveTrue(staff.getId());
+            for (FaceData face : activeFaces) {
+                face.setIsActive(false);
+                faceDataRepository.save(face);
+            }
         }
 
-        FaceData faceData = modelMapper.map(request, FaceData.class);
-        faceData.setStaff(staff);
-        faceData.setIsActive(true);
+        FaceData faceData = FaceData.builder()
+                .staff(staff)
+                .faceEmbedding(request.getFaceEmbedding())
+                .imageUrl(request.getImageUrl())
+                .isActive(true)
+                .build();
 
         FaceData saved = faceDataRepository.save(faceData);
+
+        // Invalidate face vector cache cho org này để vector mới được cập nhật ngay lập tức
+        faceVectorCacheService.invalidate(userId);
+
         return modelMapper.map(saved, FaceDataResponse.class);
     }
 
     @Override
     @Transactional
     public FaceDataResponse uploadAndRegisterFace(Long userId, Long staffId, MultipartFile file) throws IOException {
-        String embeddingStr = aiService.extractFaceEmbedding(file);
-        // Upload ảnh trước, sau đó lưu DB — nếu DB thất bại thì rollback ảnh trên Cloudinary
-        String imageUrl = cloudinaryService.uploadFile(file);
+        SecurityUtils.validateTenantAccess(userId);
+        return uploadAndRegisterFace(userId, staffId, file, false);
+    }
+
+    @Override
+    @Transactional
+    public FaceDataResponse uploadAndRegisterFace(Long userId, Long staffId, MultipartFile file, boolean replace) throws IOException {
+        SecurityUtils.validateTenantAccess(userId);
+        AiService.AiFaceResult aiResult = aiService.extractFaceDetail(file);
+        String embeddingStr = aiResult.getEmbeddingJson();
+
+        // Tải ảnh chân dung cận cảnh 1:1 đã crop 20% margin lên Cloudinary (~30KB) để hiển thị siêu nét và không dính background
+        String imageUrl;
+        if (aiResult.getCroppedImageBase64() != null && !aiResult.getCroppedImageBase64().isBlank()) {
+            imageUrl = cloudinaryService.uploadBase64Image(aiResult.getCroppedImageBase64());
+        } else {
+            imageUrl = cloudinaryService.uploadFile(file);
+        }
 
         try {
             FaceDataRequest request = new FaceDataRequest();
@@ -240,9 +295,9 @@ public class StaffServiceImpl implements StaffService {
             request.setImageUrl(imageUrl);
             request.setFaceEmbedding(embeddingStr);
 
-            return registerFace(userId, request);
+            return registerFaceInternal(userId, request, replace);
         } catch (Exception e) {
-            // BUG-011 fix: Rollback — xóa ảnh orphan trên Cloudinary khi lưu DB thất bại
+            // Rollback — xóa ảnh orphan trên Cloudinary khi lưu DB thất bại
             cloudinaryService.deleteFile(imageUrl);
             throw e;
         }
@@ -250,6 +305,7 @@ public class StaffServiceImpl implements StaffService {
 
     @Override
     public List<FaceDataResponse> getFaceDataList(Long userId, Long staffId) {
+        SecurityUtils.validateTenantAccess(userId);
         Staff staff = staffRepository.findById(staffId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên"));
 
@@ -260,5 +316,78 @@ public class StaffServiceImpl implements StaffService {
         return faceDataRepository.findByStaffId(staffId).stream()
                 .map(face -> modelMapper.map(face, FaceDataResponse.class))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<StaffResponse> getTrashStaff(Long userId) {
+        SecurityUtils.validateTenantAccess(userId);
+        return staffRepository.findByUserIdAndIsDeletedTrue(userId).stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public StaffResponse restoreStaff(Long userId, Long staffId) {
+        SecurityUtils.validateTenantAccess(userId);
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên trong thùng rác"));
+
+        if (!staff.getUser().getId().equals(userId)) {
+            throw new BadRequestException("Truy cập trái phép vào thông tin nhân viên");
+        }
+
+        staff.setIsDeleted(false);
+        staff.setStatus(StaffStatus.ACTIVE);
+        Staff saved = staffRepository.save(staff);
+
+        faceVectorCacheService.invalidate(userId);
+        return convertToResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public void permanentDeleteStaff(Long userId, Long staffId) {
+        SecurityUtils.validateTenantAccess(userId);
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên"));
+
+        if (!staff.getUser().getId().equals(userId)) {
+            throw new BadRequestException("Truy cập trái phép vào thông tin nhân viên");
+        }
+
+        faceDataRepository.deleteByStaffId(staffId);
+        attendanceRepository.deleteByStaffId(staffId);
+        salaryRepository.deleteByStaffId(staffId);
+        staffRepository.delete(staff);
+
+        faceVectorCacheService.invalidate(userId);
+    }
+
+    @Override
+    @Transactional
+    public void restoreAllTrash(Long userId) {
+        SecurityUtils.validateTenantAccess(userId);
+        List<Staff> trashList = staffRepository.findByUserIdAndIsDeletedTrue(userId);
+        for (Staff staff : trashList) {
+            staff.setIsDeleted(false);
+            staff.setStatus(StaffStatus.ACTIVE);
+            staffRepository.save(staff);
+        }
+        faceVectorCacheService.invalidate(userId);
+    }
+
+    @Override
+    @Transactional
+    public void emptyTrash(Long userId) {
+        SecurityUtils.validateTenantAccess(userId);
+        List<Staff> trashList = staffRepository.findByUserIdAndIsDeletedTrue(userId);
+        for (Staff staff : trashList) {
+            faceDataRepository.deleteByStaffId(staff.getId());
+            attendanceRepository.deleteByStaffId(staff.getId());
+            salaryRepository.deleteByStaffId(staff.getId());
+            staffRepository.delete(staff);
+        }
+        faceVectorCacheService.invalidate(userId);
     }
 }

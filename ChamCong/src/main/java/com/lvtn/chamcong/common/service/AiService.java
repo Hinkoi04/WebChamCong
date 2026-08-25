@@ -18,6 +18,12 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.multipart.MultipartFile;
 import com.lvtn.chamcong.common.exception.BadRequestException;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
@@ -33,17 +39,38 @@ public class AiService {
     @Value("${app.ai.service-url}")
     private String aiServiceUrl;
 
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class AiFaceResult {
+        private String embeddingJson;
+        private String croppedImageBase64;
+        private Double confidence;
+    }
+
     public String extractFaceEmbedding(MultipartFile file) throws IOException {
+        AiFaceResult res = extractFaceDetail(file);
+        return res.getEmbeddingJson();
+    }
+
+    public AiFaceResult extractFaceDetail(MultipartFile file) throws IOException {
         ByteArrayResource resource = new ByteArrayResource(file.getBytes()) {
             @Override
             public String getFilename() {
                 return file.getOriginalFilename() != null ? file.getOriginalFilename() : "face.jpg";
             }
         };
-        return callExtractEndpoint(resource);
+        return callExtractEndpointDetail(resource);
     }
 
     public String extractFaceEmbeddingBase64(String base64Image) throws IOException {
+        AiFaceResult res = extractFaceDetailBase64(base64Image);
+        return res.getEmbeddingJson();
+    }
+
+    public AiFaceResult extractFaceDetailBase64(String base64Image) throws IOException {
         String base64Data = base64Image.contains(",") ? base64Image.split(",")[1] : base64Image;
         byte[] imageBytes = Base64.getDecoder().decode(base64Data);
 
@@ -53,14 +80,14 @@ public class AiService {
                 return "checkin.jpg";
             }
         };
-        return callExtractEndpoint(resource);
+        return callExtractEndpointDetail(resource);
     }
 
     /**
      * Gọi endpoint /extract của Python AI service.
-     * Tái sử dụng bởi cả extractFaceEmbedding() và extractFaceEmbeddingBase64().
+     * Trả về cả embedding vector và cropped_image nếu có.
      */
-    private String callExtractEndpoint(ByteArrayResource resource) throws IOException {
+    private AiFaceResult callExtractEndpointDetail(ByteArrayResource resource) throws IOException {
         String url = aiServiceUrl + "/extract";
 
         HttpHeaders headers = new HttpHeaders();
@@ -77,7 +104,17 @@ public class AiService {
                 JsonNode root = objectMapper.readTree(response.getBody());
                 JsonNode embeddingNode = root.get("embedding");
                 if (embeddingNode != null) {
-                    return objectMapper.writeValueAsString(embeddingNode);
+                    String embeddingJson = objectMapper.writeValueAsString(embeddingNode);
+                    String croppedImage = root.has("cropped_image") && !root.get("cropped_image").isNull()
+                            ? root.get("cropped_image").asText()
+                            : null;
+                    Double confidence = root.has("face_confidence") ? root.get("face_confidence").asDouble() : 1.0;
+
+                    return AiFaceResult.builder()
+                            .embeddingJson(embeddingJson)
+                            .croppedImageBase64(croppedImage)
+                            .confidence(confidence)
+                            .build();
                 }
             }
             throw new RuntimeException("Failed to extract face embedding, no embedding in response.");

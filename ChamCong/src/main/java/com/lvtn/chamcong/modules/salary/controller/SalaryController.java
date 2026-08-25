@@ -26,6 +26,13 @@ public class SalaryController {
         return ResponseEntity.ok(salaryService.calculateSalary(orgId, staffId, request));
     }
 
+    @PostMapping("/calculate-all")
+    public ResponseEntity<List<SalaryResponse>> calculateAllSalaries(
+            @PathVariable("orgId") Long orgId,
+            @Valid @RequestBody SalaryCalculateRequest request) {
+        return ResponseEntity.ok(salaryService.calculateAllSalaries(orgId, request.getMonth(), request.getYear()));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<SalaryResponse> updateSalary(
             @PathVariable("orgId") Long orgId,
@@ -39,5 +46,25 @@ public class SalaryController {
             @PathVariable("orgId") Long orgId,
             @PathVariable("staffId") Long staffId) {
         return ResponseEntity.ok(salaryService.getSalaryHistory(orgId, staffId));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<SalaryResponse>> getSalariesByMonthYear(
+            @PathVariable("orgId") Long orgId,
+            @RequestParam("month") Integer month,
+            @RequestParam("year") Integer year) {
+        return ResponseEntity.ok(salaryService.getSalariesByMonthYear(orgId, month, year));
+    }
+
+    @GetMapping("/export-excel")
+    public ResponseEntity<byte[]> exportSalaryExcel(
+            @PathVariable("orgId") Long orgId,
+            @RequestParam("month") Integer month,
+            @RequestParam("year") Integer year) {
+        byte[] excelBytes = salaryService.exportSalaryExcel(orgId, month, year);
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=Bang_Luong_T%02d_%d.xlsx", month, year))
+                .contentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excelBytes);
     }
 }
