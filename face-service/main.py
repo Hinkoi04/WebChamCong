@@ -1,7 +1,11 @@
+import os
+# Tối ưu hóa môi trường TensorFlow & DeepFace cho Cloud CPU
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
 from fastapi import FastAPI, UploadFile, File, HTTPException
 import uvicorn
-from deepface import DeepFace
-import os
 import shutil
 import uuid
 import cv2
@@ -9,9 +13,22 @@ import base64
 
 app = FastAPI(title="Face Recognition Service")
 
+_deepface = None
+
+def get_deepface():
+    global _deepface
+    if _deepface is None:
+        from deepface import DeepFace
+        _deepface = DeepFace
+    return _deepface
+
 @app.get("/health")
 def health_check():
-    return {"status": "ok"}
+    return {"status": "ok", "service": "face-recognition"}
+
+@app.get("/")
+def root():
+    return {"status": "ok", "message": "Face Recognition AI Service is running"}
 
 def crop_face_to_base64(image_path: str, facial_area: dict) -> str:
     """Cắt riêng vùng khuôn mặt với margin đệm 20% và trả về ảnh Base64 JPEG chân dung cận cảnh tỉ lệ 1:1"""
@@ -52,11 +69,12 @@ async def extract_face(file: UploadFile = File(...)):
         with open(file_location, "wb+") as file_object:
             shutil.copyfileobj(file.file, file_object)
 
+        DeepFaceModule = get_deepface()
         result = None
-        # Thử detector retinaface & mtcnn trước (cực kỳ nhạy, chính xác cả khi góc nghiêng/thiếu sáng), sau đó opencv, ssd
-        for detector in ["retinaface", "mtcnn", "opencv", "ssd"]:
+        # Thử detector opencv/ssd trước (nhanh, nhẹ cho cloud) rồi đến mtcnn, retinaface
+        for detector in ["opencv", "ssd", "mtcnn", "retinaface"]:
             try:
-                result = DeepFace.represent(
+                result = DeepFaceModule.represent(
                     img_path=file_location,
                     model_name="Facenet",
                     detector_backend=detector,
@@ -99,6 +117,5 @@ async def extract_face(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
+    port = int(os.environ.get("PORT", 10000))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
-
