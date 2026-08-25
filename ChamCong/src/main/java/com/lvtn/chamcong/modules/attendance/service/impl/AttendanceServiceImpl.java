@@ -23,12 +23,17 @@ import com.lvtn.chamcong.modules.work_schedule.repository.WorkScheduleRepository
 import com.lvtn.chamcong.common.service.AiService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lvtn.chamcong.common.service.ExcelExportService;
+import com.lvtn.chamcong.common.service.FaceVectorCacheService;
+import com.lvtn.chamcong.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -38,6 +43,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class AttendanceServiceImpl implements AttendanceService {
 
@@ -49,6 +55,8 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final ModelMapper modelMapper;
     private final AiService aiService;
     private final ObjectMapper objectMapper;
+    private final FaceVectorCacheService faceVectorCacheService;
+    private final ExcelExportService excelExportService;
 
     /** Helper: map Attendance → AttendanceResponse và điền thêm staffName, staffCode */
     private AttendanceResponse toResponse(Attendance attendance) {
@@ -119,9 +127,9 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional
     public AttendanceResponse faceScan(Long orgId, String base64Image, String action) {
-        // 1. Lấy tất cả face embeddings active của toàn org
-        List<FaceData> allOrgFaces = faceDataRepository.findByStaff_User_IdAndIsActiveTrue(orgId);
-        if (allOrgFaces.isEmpty()) {
+        // 1. Lấy tất cả face embeddings active của toàn org từ In-memory Cache
+        List<FaceVectorCacheService.CachedFace> cachedFaces = faceVectorCacheService.getActiveFacesForOrg(orgId);
+        if (cachedFaces.isEmpty()) {
             throw new BadRequestException("Tổ chức này chưa có nhân viên nào đăng ký khuôn mặt");
         }
 
@@ -135,22 +143,16 @@ public class AttendanceServiceImpl implements AttendanceService {
             throw new BadRequestException("Không tìm thấy khuôn mặt trong ảnh, vui lòng đứng gần camera hơn");
         }
 
-        // 3. So sánh với từng embedding đã đăng ký → tìm nhân viên khớp nhất
-        FaceData bestMatch = null;
+        // 3. So sánh với từng embedding trong cache → tìm nhân viên khớp nhất
+        FaceVectorCacheService.CachedFace bestMatch = null;
         double bestSimilarity = 0.0;
         final double THRESHOLD = 0.58;
 
-        for (FaceData faceData : allOrgFaces) {
-            try {
-                List<Double> registeredVector = objectMapper.readValue(
-                        faceData.getFaceEmbedding(), new TypeReference<List<Double>>() {});
-                double similarity = aiService.calculateCosineSimilarity(scanVector, registeredVector);
-                if (similarity > bestSimilarity) {
-                    bestSimilarity = similarity;
-                    bestMatch = faceData;
-                }
-            } catch (Exception ignored) {
-                // bỏ qua face data bị corrupt
+        for (FaceVectorCacheService.CachedFace cachedFace : cachedFaces) {
+            double similarity = aiService.calculateCosineSimilarity(scanVector, cachedFace.getVector());
+            if (similarity > bestSimilarity) {
+                bestSimilarity = similarity;
+                bestMatch = cachedFace;
             }
         }
 
@@ -182,8 +184,9 @@ public class AttendanceServiceImpl implements AttendanceService {
         WorkSchedule schedule = workScheduleRepository.findByUserIdAndIsDefaultTrue(staff.getUser().getId())
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy cấu hình ca làm việc mặc định cho tổ chức này"));
 
-        Attendance attendance = attendanceRepository.findByStaffIdAndWorkDateForUpdate(staff.getId(), today)
-                .orElse(null);
+        String todayStr = today.toString();
+        Attendance attendance = attendanceRepository.findByStaffIdAndWorkDateForUpdate(staff.getId(), todayStr)
+                .orElseGet(() -> attendanceRepository.findByStaffIdAndWorkDate(staff.getId(), today).orElse(null));
 
         String normalizedAction = (action == null || action.trim().isEmpty()) ? "AUTO" : action.trim().toUpperCase();
 
@@ -194,14 +197,20 @@ public class AttendanceServiceImpl implements AttendanceService {
                             staff.getFullName(), attendance.getCheckInTime().format(timeFormatter)));
                 }
 
-                attendance = Attendance.builder()
-                        .staff(staff)
-                        .workDate(today)
-                        .checkInTime(now)
-                        .checkInImage(checkInImage)
-                        .checkInMethod(method)
-                        .status(AttendanceStatus.ON_TIME)
-                        .build();
+                if (attendance == null) {
+                    attendance = Attendance.builder()
+                            .staff(staff)
+                            .workDate(today)
+                            .checkInTime(now)
+                            .checkInImage(checkInImage)
+                            .checkInMethod(method)
+                            .status(AttendanceStatus.ON_TIME)
+                            .build();
+                } else {
+                    attendance.setCheckInTime(now);
+                    attendance.setCheckInImage(checkInImage);
+                    attendance.setCheckInMethod(method);
+                }
 
                 LocalTime checkInTimeOnly = now.toLocalTime();
                 LocalTime lateThreshold = schedule.getStartTime().plusMinutes(schedule.getLateGraceMinutes());
@@ -242,6 +251,14 @@ public class AttendanceServiceImpl implements AttendanceService {
                     LocalTime lateThreshold = schedule.getStartTime().plusMinutes(schedule.getLateGraceMinutes());
                     attendance.setStatus(checkInTimeOnly.isAfter(lateThreshold)
                             ? AttendanceStatus.LATE : AttendanceStatus.ON_TIME);
+                } else if (attendance.getCheckInTime() == null) {
+                    attendance.setCheckInTime(now);
+                    attendance.setCheckInImage(checkInImage);
+                    attendance.setCheckInMethod(method);
+                    LocalTime checkInTimeOnly = now.toLocalTime();
+                    LocalTime lateThreshold = schedule.getStartTime().plusMinutes(schedule.getLateGraceMinutes());
+                    attendance.setStatus(checkInTimeOnly.isAfter(lateThreshold)
+                            ? AttendanceStatus.LATE : AttendanceStatus.ON_TIME);
                 } else if (attendance.getCheckOutTime() == null) {
                     attendance.setCheckOutTime(now);
                     LocalTime checkOutTimeOnly = now.toLocalTime();
@@ -267,6 +284,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional
     public AttendanceResponse manualAttendance(Long userId, ManualAttendanceRequest request) {
+        SecurityUtils.validateTenantAccess(userId);
         Staff staff = staffRepository.findById(request.getStaffId())
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên"));
 
@@ -274,8 +292,9 @@ public class AttendanceServiceImpl implements AttendanceService {
             throw new BadRequestException("Truy cập trái phép vào thông tin nhân viên");
         }
 
-        Attendance attendance = attendanceRepository.findByStaffIdAndWorkDateForUpdate(staff.getId(), request.getWorkDate())
-                .orElse(null);
+        String workDateStr = request.getWorkDate().toString();
+        Attendance attendance = attendanceRepository.findByStaffIdAndWorkDateForUpdate(staff.getId(), workDateStr)
+                .orElseGet(() -> attendanceRepository.findByStaffIdAndWorkDate(staff.getId(), request.getWorkDate()).orElse(null));
 
         String oldValueJson = "null";
         if (attendance != null) {
@@ -290,7 +309,41 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         attendance.setCheckInTime(request.getCheckInTime());
         attendance.setCheckOutTime(request.getCheckOutTime());
-        attendance.setStatus(request.getStatus());
+        
+        // Tự động tính toán trạng thái dựa theo giờ check-in và check-out so với ca làm việc
+        WorkSchedule schedule = workScheduleRepository.findByUserIdAndIsDefaultTrue(userId).orElse(null);
+        AttendanceStatus computedStatus;
+
+        if (request.getCheckInTime() == null && request.getCheckOutTime() == null) {
+            computedStatus = (request.getStatus() == AttendanceStatus.LEAVE) ? AttendanceStatus.LEAVE : AttendanceStatus.ABSENT;
+        } else {
+            LocalTime startTime = (schedule != null && schedule.getStartTime() != null) ? schedule.getStartTime() : LocalTime.of(8, 0);
+            LocalTime endTime = (schedule != null && schedule.getEndTime() != null) ? schedule.getEndTime() : LocalTime.of(17, 0);
+            int lateGrace = (schedule != null && schedule.getLateGraceMinutes() != null) ? schedule.getLateGraceMinutes() : 0;
+            LocalTime lateThreshold = startTime.plusMinutes(lateGrace);
+
+            boolean isLate = false;
+            if (request.getCheckInTime() != null) {
+                isLate = request.getCheckInTime().toLocalTime().isAfter(lateThreshold);
+            }
+
+            boolean isEarly = false;
+            if (request.getCheckOutTime() != null) {
+                isEarly = request.getCheckOutTime().toLocalTime().isBefore(endTime);
+            }
+
+            if (isLate && isEarly) {
+                computedStatus = AttendanceStatus.LATE_AND_EARLY_LEAVE;
+            } else if (isLate) {
+                computedStatus = AttendanceStatus.LATE;
+            } else if (isEarly) {
+                computedStatus = AttendanceStatus.EARLY_LEAVE;
+            } else {
+                computedStatus = AttendanceStatus.ON_TIME;
+            }
+        }
+
+        attendance.setStatus(computedStatus);
         attendance.setCheckInMethod(CheckInMethod.MANUAL);
         attendance.setNote(request.getNote());
 
@@ -307,6 +360,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     public List<AttendanceResponse> getAttendanceHistory(Long userId, Long staffId, LocalDate startDate, LocalDate endDate) {
+        SecurityUtils.validateTenantAccess(userId);
         if (staffId != null) {
             Staff staff = staffRepository.findById(staffId)
                     .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên"));
@@ -318,6 +372,18 @@ public class AttendanceServiceImpl implements AttendanceService {
         }
         return attendanceRepository.findByStaff_User_IdAndWorkDateBetween(userId, startDate, endDate).stream()
                 .map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    public byte[] exportAttendanceExcel(Long userId, Long staffId, LocalDate startDate, LocalDate endDate) {
+        SecurityUtils.validateTenantAccess(userId);
+        List<AttendanceResponse> history = getAttendanceHistory(userId, staffId, startDate, endDate);
+        try {
+            return excelExportService.exportAttendanceToExcel(history, startDate, endDate);
+        } catch (IOException e) {
+            log.error("Error exporting attendance to Excel", e);
+            throw new BadRequestException("Không thể tạo file Excel chấm công: " + e.getMessage());
+        }
     }
 }
 

@@ -57,4 +57,18 @@ public class AttendanceController {
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         return ResponseEntity.ok(attendanceService.getAttendanceHistory(principal.getId(), staffId, startDate, endDate));
     }
+
+    @GetMapping("/org/{orgId}/attendances/export-excel")
+    public ResponseEntity<byte[]> exportAttendanceExcel(
+            @PathVariable("orgId") Long orgId,
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(value = "staffId", required = false) Long staffId,
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        byte[] excelBytes = attendanceService.exportAttendanceExcel(principal.getId(), staffId, startDate, endDate);
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Bang_Cham_Cong.xlsx")
+                .contentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excelBytes);
+    }
 }

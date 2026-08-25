@@ -27,4 +27,23 @@ export const attendanceService = {
     });
     return res.data;
   },
+
+  exportAttendanceExcel: async (orgId, staffId, startDate, endDate) => {
+    const params = { startDate, endDate };
+    if (staffId) {
+      params.staffId = staffId;
+    }
+    const res = await api.get(`/api/org/${orgId}/attendances/export-excel`, {
+      params,
+      responseType: 'blob'
+    });
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Bang_Cham_Cong_${startDate}_${endDate}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
 };

@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 spring:
   application:
@@ -9,21 +9,26 @@ spring:
       mode: always
       continue-on-error: true
   datasource:
-    url: jdbc:mysql://gateway01.ap-southeast-1.prod.aws.tidbcloud.com:4000/attendance_saas?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: 4MuZ4xB7AZaMJPA.root
-    password: thYm8pWX353ToZud
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://gateway01.ap-southeast-1.prod.aws.tidbcloud.com:4000/attendance_saas?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:4MuZ4xB7AZaMJPA.root}
+    password: ${SPRING_DATASOURCE_PASSWORD:thYm8pWX353ToZud}
   jpa:
     hibernate:
       ddl-auto: validate   # schema.sql is the source of truth; JPA only validates
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
     open-in-view: false
 
+cloudinary:
+  url: ${CLOUDINARY_URL:cloudinary://219384734294611:LCRo7DgLUbq7zjYdp1EeuvrxjHY@qloyjjtg}
+
 app:
   jwt:
-    secret: "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_AT_LEAST_256_BITS_LONG"
-    expiration-ms: 86400000   # 24h
+    secret: ${APP_JWT_SECRET:CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_AT_LEAST_256_BITS_LONG}
+    expiration-ms: ${APP_JWT_EXPIRATION_MS:86400000}   # 24h
   cors:
-    allowed-origins: "http://localhost:5173,http://localhost:3000"
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,https://*.vercel.app}
+  ai:
+    service-url: ${APP_AI_SERVICE_URL:http://localhost:8000/api/v1}

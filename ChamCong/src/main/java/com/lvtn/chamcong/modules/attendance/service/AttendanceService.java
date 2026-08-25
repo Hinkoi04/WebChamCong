@@ -14,5 +14,6 @@ public interface AttendanceService {
     /** Quét khuôn mặt toàn org: tự nhận diện nhân viên không cần staffId */
     AttendanceResponse faceScan(Long orgId, String base64Image);
     AttendanceResponse faceScan(Long orgId, String base64Image, String action);
+    byte[] exportAttendanceExcel(Long userId, Long staffId, LocalDate startDate, LocalDate endDate);
 }
 

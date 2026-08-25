@@ -13,9 +13,11 @@ import OrgDashboardPage from './modules/dashboard/pages/OrgDashboardPage';
 import OrgStaffPage from './modules/staff/pages/OrgStaffPage';
 import OrgDepartmentsPage from './modules/staff/pages/OrgDepartmentsPage';
 import OrgAttendancePage from './modules/attendance/pages/OrgAttendancePage';
+import OrgAttendanceManagementPage from './modules/attendance/pages/OrgAttendanceManagementPage';
 import OrgAutoAttendancePage from './modules/attendance/pages/OrgAutoAttendancePage';
 import OrgSalaryPage from './modules/salary/pages/OrgSalaryPage';
 import OrgSettingsPage from './modules/settings/pages/OrgSettingsPage';
+import OrgTrashPage from './modules/staff/pages/OrgTrashPage';
 import SchedulePage from './modules/work_schedule/pages/SchedulePage';
 
 // Admin Pages
@@ -45,10 +47,12 @@ function App() {
             <Route path="/org/staff" element={<OrgStaffPage />} />
             <Route path="/org/departments" element={<OrgDepartmentsPage />} />
             <Route path="/org/schedule" element={<SchedulePage />} />
-            <Route path="/org/attendance" element={<OrgAttendancePage />} />
             <Route path="/org/auto-attendance" element={<OrgAutoAttendancePage />} />
+            <Route path="/org/attendance-management" element={<OrgAttendanceManagementPage />} />
+            <Route path="/org/attendance" element={<OrgAttendancePage />} />
             <Route path="/org/salary" element={<OrgSalaryPage />} />
             <Route path="/org/settings" element={<OrgSettingsPage />} />
+            <Route path="/org/trash" element={<OrgTrashPage />} />
           </Route>
 
           {/* Admin Dashboard routes */}

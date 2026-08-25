@@ -23,9 +23,11 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
            nativeQuery = true)
     Optional<Attendance> findByStaffIdAndWorkDateForUpdate(
             @Param("staffId") Long staffId,
-            @Param("workDate") LocalDate workDate);
+            @Param("workDate") String workDate);
 
     Optional<Attendance> findByStaffIdAndWorkDate(Long staffId, LocalDate workDate);
     List<Attendance> findByStaffIdAndWorkDateBetween(Long staffId, LocalDate startDate, LocalDate endDate);
     List<Attendance> findByStaff_User_IdAndWorkDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
+    List<Attendance> findByWorkDateBetween(LocalDate startDate, LocalDate endDate);
+    void deleteByStaffId(Long staffId);
 }
