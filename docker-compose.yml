@@ -1,0 +1,45 @@
+services:
+  # 1. Python Face AI Recognition Service
+  face-service:
+    build:
+      context: ./face-service
+      dockerfile: Dockerfile
+    container_name: face-attendance-ai
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+
+  # 2. Java Spring Boot Backend Service
+  backend:
+    build:
+      context: ./ChamCong
+      dockerfile: Dockerfile
+    container_name: face-attendance-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - face-service
+    environment:
+      - PORT=8080
+      - APP_AI_SERVICE_URL=http://face-service:8000/api/v1
+      - APP_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,https://*.vercel.app
+      - SPRING_DATASOURCE_URL=jdbc:mysql://gateway01.ap-southeast-1.prod.aws.tidbcloud.com:4000/attendance_saas?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=4MuZ4xB7AZaMJPA.root
+      - SPRING_DATASOURCE_PASSWORD=thYm8pWX353ToZud
+      - CLOUDINARY_URL=cloudinary://219384734294611:LCRo7DgLUbq7zjYdp1EeuvrxjHY@qloyjjtg
+      - APP_JWT_SECRET=CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_AT_LEAST_256_BITS_LONG
+
+  # 3. React Frontend Service
+  frontend:
+    build:
+      context: ./react-app
+      dockerfile: Dockerfile
+    container_name: face-attendance-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend

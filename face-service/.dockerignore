@@ -1,0 +1,11 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+temp_*
+.deepface/
+weights/
+*.h5
+.git/
+.idea/
+.vscode/
