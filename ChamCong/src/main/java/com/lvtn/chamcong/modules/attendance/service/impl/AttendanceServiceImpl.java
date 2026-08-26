@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -177,8 +178,8 @@ public class AttendanceServiceImpl implements AttendanceService {
      */
     @Transactional
     private AttendanceResponse recordAttendance(Staff staff, String checkInImage, CheckInMethod method, String action) {
-        LocalDate today = LocalDate.now();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
         WorkSchedule schedule = workScheduleRepository.findByUserIdAndIsDefaultTrue(staff.getUser().getId())
