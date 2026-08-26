@@ -21,7 +21,10 @@ import com.lvtn.chamcong.modules.department.entity.Department;
 import com.lvtn.chamcong.modules.department.repository.DepartmentRepository;
 import com.lvtn.chamcong.modules.attendance.repository.AttendanceRepository;
 import com.lvtn.chamcong.modules.salary.repository.SalaryRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +42,7 @@ import com.lvtn.chamcong.security.SecurityUtils;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class StaffServiceImpl implements StaffService {
 
@@ -53,6 +57,7 @@ public class StaffServiceImpl implements StaffService {
     private final CloudinaryService cloudinaryService;
     private final AiService aiService;
     private final FaceVectorCacheService faceVectorCacheService;
+    private final ObjectMapper objectMapper;
 
     private StaffResponse convertToResponse(Staff staff) {
         StaffResponse response = modelMapper.map(staff, StaffResponse.class);
@@ -243,7 +248,39 @@ public class StaffServiceImpl implements StaffService {
             throw new BadRequestException("Truy cập trái phép vào thông tin nhân viên");
         }
 
-        // Nếu replace = true (ví dụ Bước 1 trong quy trình 5 góc), vô hiệu hóa các vector cũ
+        // Bẫy lỗi: Kiểm tra chống đăng ký trùng khuôn mặt với nhân viên khác trong cùng tổ chức
+        try {
+            List<Double> newVector = objectMapper.readValue(request.getFaceEmbedding(), new TypeReference<List<Double>>() {});
+            List<FaceVectorCacheService.CachedFace> cachedFaces = faceVectorCacheService.getActiveFacesForOrg(userId);
+
+            for (FaceVectorCacheService.CachedFace cachedFace : cachedFaces) {
+                // Bỏ qua vector của chính nhân viên đang đăng ký
+                if (cachedFace.getStaffId().equals(staff.getId())) {
+                    continue;
+                }
+
+                double similarity = aiService.calculateCosineSimilarity(newVector, cachedFace.getVector());
+                if (similarity >= 0.58) {
+                    Staff matchedStaff = cachedFace.getStaff();
+                    String matchedName = matchedStaff != null ? matchedStaff.getFullName() : ("ID #" + cachedFace.getStaffId());
+                    String matchedCode = (matchedStaff != null && matchedStaff.getStaffCode() != null) ? matchedStaff.getStaffCode() : "";
+
+                    log.warn("Duplicate face detected for orgId {}: new staff '{}' matches existing staff '{}' with similarity: {}",
+                            userId, staff.getFullName(), matchedName, similarity);
+
+                    throw new BadRequestException(String.format(
+                            "Khuôn mặt này trùng với nhân viên: %s (Mã: %s) - Độ khớp: %.1f%%. Không thể đăng ký trùng lặp!",
+                            matchedName, matchedCode, similarity * 100
+                    ));
+                }
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("Không thể kiểm tra trùng khuôn mặt do lỗi đọc vector: {}", e.getMessage());
+        }
+
+        // Nếu replace = true (ví dụ Bước 1 trong quy trình đăng ký mới), vô hiệu hóa các vector cũ
         if (replace) {
             List<FaceData> activeFaces = faceDataRepository.findByStaffIdAndIsActiveTrue(staff.getId());
             for (FaceData face : activeFaces) {
@@ -271,14 +308,20 @@ public class StaffServiceImpl implements StaffService {
     @Transactional
     public FaceDataResponse uploadAndRegisterFace(Long userId, Long staffId, MultipartFile file) throws IOException {
         SecurityUtils.validateTenantAccess(userId);
-        return uploadAndRegisterFace(userId, staffId, file, false);
+        return uploadAndRegisterFace(userId, staffId, file, false, null);
     }
 
     @Override
     @Transactional
     public FaceDataResponse uploadAndRegisterFace(Long userId, Long staffId, MultipartFile file, boolean replace) throws IOException {
+        return uploadAndRegisterFace(userId, staffId, file, replace, null);
+    }
+
+    @Override
+    @Transactional
+    public FaceDataResponse uploadAndRegisterFace(Long userId, Long staffId, MultipartFile file, boolean replace, String pose) throws IOException {
         SecurityUtils.validateTenantAccess(userId);
-        AiService.AiFaceResult aiResult = aiService.extractFaceDetail(file);
+        AiService.AiFaceResult aiResult = aiService.extractFaceDetail(file, pose);
         String embeddingStr = aiResult.getEmbeddingJson();
 
         // Tải ảnh chân dung cận cảnh 1:1 đã crop 20% margin lên Cloudinary (~30KB) để hiển thị siêu nét và không dính background
@@ -301,6 +344,153 @@ public class StaffServiceImpl implements StaffService {
             cloudinaryService.deleteFile(imageUrl);
             throw e;
         }
+    }
+
+    @Override
+    public java.util.Map<String, Object> validateFace(Long userId, Long staffId, MultipartFile file, String pose) throws IOException {
+        SecurityUtils.validateTenantAccess(userId);
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên"));
+
+        if (!staff.getUser().getId().equals(userId) || staff.getIsDeleted()) {
+            throw new BadRequestException("Truy cập trái phép vào thông tin nhân viên");
+        }
+
+        AiService.AiFaceResult aiResult = aiService.extractFaceDetail(file, pose);
+
+        // Bẫy lỗi: Kiểm tra chống đăng ký trùng khuôn mặt với nhân viên khác trong cùng tổ chức
+        try {
+            List<Double> newVector = objectMapper.readValue(aiResult.getEmbeddingJson(), new TypeReference<List<Double>>() {});
+            List<FaceVectorCacheService.CachedFace> cachedFaces = faceVectorCacheService.getActiveFacesForOrg(userId);
+
+            for (FaceVectorCacheService.CachedFace cachedFace : cachedFaces) {
+                if (cachedFace.getStaffId().equals(staff.getId())) {
+                    continue;
+                }
+
+                double similarity = aiService.calculateCosineSimilarity(newVector, cachedFace.getVector());
+                if (similarity >= 0.58) {
+                    Staff matchedStaff = cachedFace.getStaff();
+                    String matchedName = matchedStaff != null ? matchedStaff.getFullName() : ("ID #" + cachedFace.getStaffId());
+                    String matchedCode = (matchedStaff != null && matchedStaff.getStaffCode() != null) ? matchedStaff.getStaffCode() : "";
+
+                    throw new BadRequestException(String.format(
+                            "Khuôn mặt này trùng với nhân viên: %s (Mã: %s) - Độ khớp: %.1f%%. Không thể đăng ký trùng lặp!",
+                            matchedName, matchedCode, similarity * 100
+                    ));
+                }
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("Lỗi kiểm tra trùng khuôn mặt khi validate: {}", e.getMessage());
+        }
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("valid", true);
+        response.put("croppedImage", aiResult.getCroppedImageBase64());
+        response.put("confidence", aiResult.getConfidence());
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public List<FaceDataResponse> batchUploadAndRegisterFaces(Long userId, Long staffId, List<MultipartFile> files, List<String> poses) throws IOException {
+        SecurityUtils.validateTenantAccess(userId);
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên"));
+
+        if (!staff.getUser().getId().equals(userId) || staff.getIsDeleted()) {
+            throw new BadRequestException("Truy cập trái phép vào thông tin nhân viên");
+        }
+
+        if (files == null || files.isEmpty()) {
+            throw new BadRequestException("Không có ảnh khuôn mặt nào được gửi lên");
+        }
+
+        // Bước 1: Trích xuất và xác thực AI cho TẤT CẢ các góc ảnh trước khi ghi DB
+        List<AiService.AiFaceResult> aiResults = new java.util.ArrayList<>();
+        List<FaceVectorCacheService.CachedFace> cachedFaces = faceVectorCacheService.getActiveFacesForOrg(userId);
+
+        for (int i = 0; i < files.size(); i++) {
+            MultipartFile f = files.get(i);
+            String pose = (poses != null && i < poses.size()) ? poses.get(i) : null;
+            AiService.AiFaceResult aiResult = aiService.extractFaceDetail(f, pose);
+
+            // Kiểm tra trùng với nhân viên khác
+            try {
+                List<Double> vector = objectMapper.readValue(aiResult.getEmbeddingJson(), new TypeReference<List<Double>>() {});
+                for (FaceVectorCacheService.CachedFace cachedFace : cachedFaces) {
+                    if (cachedFace.getStaffId().equals(staff.getId())) {
+                        continue;
+                    }
+                    double similarity = aiService.calculateCosineSimilarity(vector, cachedFace.getVector());
+                    if (similarity >= 0.58) {
+                        Staff matchedStaff = cachedFace.getStaff();
+                        String matchedName = matchedStaff != null ? matchedStaff.getFullName() : ("ID #" + cachedFace.getStaffId());
+                        String matchedCode = (matchedStaff != null && matchedStaff.getStaffCode() != null) ? matchedStaff.getStaffCode() : "";
+
+                        throw new BadRequestException(String.format(
+                                "Góc ảnh số %d trùng với nhân viên: %s (Mã: %s) - Độ khớp: %.1f%%!",
+                                i + 1, matchedName, matchedCode, similarity * 100
+                        ));
+                    }
+                }
+            } catch (BadRequestException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("Lỗi kiểm tra trùng khuôn mặt batch: {}", e.getMessage());
+            }
+
+            aiResults.add(aiResult);
+        }
+
+        // Bước 2: Chỉ khi TẤT CẢ các góc đều hợp lệ -> Vô hiệu hóa vector cũ và lưu toàn bộ vector mới trong 1 transaction duy nhất
+        List<FaceData> activeFaces = faceDataRepository.findByStaffIdAndIsActiveTrue(staff.getId());
+        for (FaceData face : activeFaces) {
+            face.setIsActive(false);
+            faceDataRepository.save(face);
+        }
+
+        List<FaceDataResponse> responses = new java.util.ArrayList<>();
+        List<String> uploadedCloudinaryUrls = new java.util.ArrayList<>();
+
+        try {
+            for (int i = 0; i < aiResults.size(); i++) {
+                AiService.AiFaceResult aiResult = aiResults.get(i);
+                MultipartFile originalFile = files.get(i);
+
+                String imageUrl;
+                if (aiResult.getCroppedImageBase64() != null && !aiResult.getCroppedImageBase64().isBlank()) {
+                    imageUrl = cloudinaryService.uploadBase64Image(aiResult.getCroppedImageBase64());
+                } else {
+                    imageUrl = cloudinaryService.uploadFile(originalFile);
+                }
+                uploadedCloudinaryUrls.add(imageUrl);
+
+                FaceData faceData = FaceData.builder()
+                        .staff(staff)
+                        .faceEmbedding(aiResult.getEmbeddingJson())
+                        .imageUrl(imageUrl)
+                        .isActive(true)
+                        .build();
+
+                FaceData saved = faceDataRepository.save(faceData);
+                responses.add(modelMapper.map(saved, FaceDataResponse.class));
+            }
+        } catch (Exception e) {
+            // Rollback — xóa các ảnh đã tải lên Cloudinary nếu lưu DB gặp lỗi
+            for (String url : uploadedCloudinaryUrls) {
+                try {
+                    cloudinaryService.deleteFile(url);
+                } catch (Exception ignored) {}
+            }
+            throw e;
+        }
+
+        // Invalidate cache
+        faceVectorCacheService.invalidate(userId);
+        return responses;
     }
 
     @Override

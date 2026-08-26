@@ -21,10 +21,43 @@ export const staffService = {
     const res = await api.post(`/api/org/${orgId}/staffs/face`, faceData);
     return res.data;
   },
-  uploadFace: async (orgId, staffId, file, replace = false) => {
+  validateFace: async (orgId, staffId, file, pose = null) => {
     const formData = new FormData();
     formData.append('file', file);
-    const res = await api.post(`/api/org/${orgId}/staffs/${staffId}/face-upload?replace=${replace}`, formData, {
+    let url = `/api/org/${orgId}/staffs/${staffId}/face-validate`;
+    if (pose) {
+      url += `?pose=${encodeURIComponent(pose)}`;
+    }
+    const res = await api.post(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data;
+  },
+  uploadFace: async (orgId, staffId, file, replace = false, pose = null) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    let url = `/api/org/${orgId}/staffs/${staffId}/face-upload?replace=${replace}`;
+    if (pose) {
+      url += `&pose=${encodeURIComponent(pose)}`;
+    }
+    const res = await api.post(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data;
+  },
+  batchUploadFaces: async (orgId, staffId, files, poses = []) => {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
+    poses.forEach((pose) => {
+      formData.append('poses', pose);
+    });
+    const res = await api.post(`/api/org/${orgId}/staffs/${staffId}/face-batch-upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

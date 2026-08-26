@@ -14,7 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.multipart.MultipartFile;
 import com.lvtn.chamcong.common.exception.BadRequestException;
 
@@ -51,18 +52,22 @@ public class AiService {
     }
 
     public String extractFaceEmbedding(MultipartFile file) throws IOException {
-        AiFaceResult res = extractFaceDetail(file);
+        AiFaceResult res = extractFaceDetail(file, null);
         return res.getEmbeddingJson();
     }
 
     public AiFaceResult extractFaceDetail(MultipartFile file) throws IOException {
+        return extractFaceDetail(file, null);
+    }
+
+    public AiFaceResult extractFaceDetail(MultipartFile file, String pose) throws IOException {
         ByteArrayResource resource = new ByteArrayResource(file.getBytes()) {
             @Override
             public String getFilename() {
                 return file.getOriginalFilename() != null ? file.getOriginalFilename() : "face.jpg";
             }
         };
-        return callExtractEndpointDetail(resource);
+        return callExtractEndpointDetail(resource, pose);
     }
 
     public String extractFaceEmbeddingBase64(String base64Image) throws IOException {
@@ -80,15 +85,18 @@ public class AiService {
                 return "checkin.jpg";
             }
         };
-        return callExtractEndpointDetail(resource);
+        return callExtractEndpointDetail(resource, null);
     }
 
     /**
      * Gọi endpoint /extract của Python AI service.
      * Trả về cả embedding vector và cropped_image nếu có.
      */
-    private AiFaceResult callExtractEndpointDetail(ByteArrayResource resource) throws IOException {
+    private AiFaceResult callExtractEndpointDetail(ByteArrayResource resource, String pose) throws IOException {
         String url = aiServiceUrl + "/extract";
+        if (pose != null && !pose.isBlank()) {
+            url += "?expected_pose=" + pose.trim().toLowerCase();
+        }
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -118,8 +126,8 @@ public class AiService {
                 }
             }
             throw new RuntimeException("Failed to extract face embedding, no embedding in response.");
-        } catch (HttpClientErrorException e) {
-            log.error("AI Service returned HTTP Error: ", e);
+        } catch (HttpStatusCodeException e) {
+            log.error("AI Service returned HTTP Error: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
             try {
                 JsonNode root = objectMapper.readTree(e.getResponseBodyAsString());
                 if (root.has("detail")) {
@@ -128,11 +136,14 @@ public class AiService {
             } catch (Exception parseException) {
                 if (parseException instanceof BadRequestException) throw (BadRequestException) parseException;
             }
-            throw new BadRequestException("Lỗi khi xử lý hình ảnh khuôn mặt từ AI Service.");
+            throw new BadRequestException("Lỗi xử lý khuôn mặt từ AI Service (" + e.getStatusCode() + ")");
+        } catch (ResourceAccessException e) {
+            log.error("Cannot connect to Python AI Service: ", e);
+            throw new BadRequestException("Chưa khởi động Face AI Service (Python). Vui lòng chạy lệnh: python main.py trong thư mục face-service (Cổng 8000).");
         } catch (Exception e) {
             log.error("Error calling Python AI service: ", e);
             if (e instanceof BadRequestException) throw (BadRequestException) e;
-            throw new RuntimeException("Error communicating with AI Service: " + e.getMessage());
+            throw new BadRequestException("Lỗi kết nối AI Service: " + e.getMessage());
         }
     }
 

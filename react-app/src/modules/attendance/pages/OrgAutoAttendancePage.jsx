@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { attendanceService } from '../services/attendanceService';
 import { staffService } from '../../staff/services/staffService';
 import { 
-  Camera, CameraOff, ScanFace, Keyboard, CheckCircle2, 
-  Sparkles, UserCheck, RefreshCw, LogIn, LogOut, Clock, AlertTriangle, ShieldCheck,
-  Power
+  Camera, CameraOff, Sparkles, CheckCircle2, AlertTriangle, 
+  UserCheck, Clock, LogIn, LogOut, ScanFace, Keyboard, 
+  RefreshCw, ShieldCheck, FlipHorizontal 
 } from 'lucide-react';
 import { useToast } from '../../../contexts/ToastContext';
 
@@ -49,6 +49,7 @@ export default function OrgAutoAttendancePage() {
   const [mode, setMode] = useState('face');
   // Camera Power Switch
   const [isCameraActive, setIsCameraActive] = useState(true);
+  const [isMirrored, setIsMirrored] = useState(true);
   
   const [staffId, setStaffId] = useState('');
   const [staffList, setStaffList] = useState([]);
@@ -122,10 +123,18 @@ export default function OrgAutoAttendancePage() {
     if (video.videoWidth === 0 || video.videoHeight === 0) return null;
 
     const canvas = canvasRef.current;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Giới hạn độ phân giải hợp lý (tối đa 720px) để xử lý mượt mà và tránh giật lag trên Mobile
+    const maxWidth = 720;
+    const scale = Math.min(1, maxWidth / video.videoWidth);
+    const targetWidth = Math.round(video.videoWidth * scale);
+    const targetHeight = Math.round(video.videoHeight * scale);
+
+    if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+    }
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
     return canvas.toDataURL('image/jpeg', 0.85);
   }, []);
 
@@ -450,22 +459,32 @@ export default function OrgAutoAttendancePage() {
                         autoPlay
                         playsInline
                         muted
-                        className={`w-full h-full object-cover transition-opacity duration-300 ${
-                          cooldown ? 'opacity-30' : 'opacity-100'
-                        }`}
+                        className={`w-full h-full object-cover will-change-transform transform-gpu ${
+                          isMirrored ? '-scale-x-100' : ''
+                        } ${cooldown ? 'opacity-30' : 'opacity-100'}`}
                       />
 
-                      {/* Biometric Scanning Oval Overlay */}
+                      {/* Mirror Toggle Button */}
+                      <button
+                        type="button"
+                        onClick={() => setIsMirrored(prev => !prev)}
+                        title={isMirrored ? 'Đang bật lật ảnh gương (Selfie). Nhấn để tắt' : 'Đang tắt lật ảnh gương. Nhấn để bật'}
+                        className="absolute top-3 right-3 z-10 p-2.5 rounded-xl bg-black/60 hover:bg-black/80 text-zinc-300 hover:text-white border border-white/10 backdrop-blur-md transition-all cursor-pointer shadow-lg"
+                      >
+                        <FlipHorizontal className="w-4 h-4" />
+                      </button>
+
+                      {/* Biometric Scanning Oval Overlay - Không dùng scale để tránh giật khung hình mobile */}
                       {!cooldown && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className={`relative w-48 h-60 sm:w-56 sm:h-72 rounded-[45%] border-2 border-dashed transition-all duration-300 ${
+                          <div className={`relative w-48 h-60 sm:w-56 sm:h-72 rounded-[45%] border-2 border-dashed transition-colors duration-300 ${
                             scanning
                               ? isCheckInTab
-                                ? 'border-emerald-400 scale-105 shadow-[0_0_30px_rgba(16,185,129,0.6)]'
-                                : 'border-amber-400 scale-105 shadow-[0_0_30px_rgba(245,158,11,0.6)]'
+                                ? 'border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.5)]'
+                                : 'border-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.5)]'
                               : isCheckInTab
-                              ? 'border-emerald-500/60 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
-                              : 'border-amber-500/60 shadow-[0_0_20px_rgba(245,158,11,0.2)]'
+                              ? 'border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                              : 'border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
                           }`}>
                             {/* Laser scanning line */}
                             <div className={`absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-current to-transparent animate-[scanLaser_2.4s_ease-in-out_infinite] ${
@@ -541,9 +560,9 @@ export default function OrgAutoAttendancePage() {
               </div>
               <canvas ref={canvasRef} className="hidden" />
 
-              {/* Status Message pill under camera */}
+              {/* Status Message pill under camera - min height cố định để tránh đẩy layout */}
               {mode === 'face' && isCameraActive && (
-                <div className="mt-4 flex items-center gap-2.5 px-4 py-3 bg-zinc-950/60 border border-zinc-800/80 rounded-2xl">
+                <div className="mt-4 flex items-center gap-2.5 px-4 py-3 bg-zinc-950/60 border border-zinc-800/80 rounded-2xl min-h-[46px]">
                   {scanning ? (
                     <RefreshCw className={`w-4 h-4 animate-spin shrink-0 ${isCheckInTab ? 'text-emerald-400' : 'text-amber-400'}`} />
                   ) : (
