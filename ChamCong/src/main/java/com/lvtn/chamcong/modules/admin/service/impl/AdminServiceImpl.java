@@ -102,7 +102,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public List<AdminWeeklyStatResponse> getWeeklyAttendanceStats() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         LocalDate monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate sunday = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
 
