@@ -9,9 +9,11 @@ spring:
       mode: always
       continue-on-error: true
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://gateway01.ap-southeast-1.prod.aws.tidbcloud.com:4000/attendance_saas?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://gateway01.ap-southeast-1.prod.aws.tidbcloud.com:4000/attendance_saas?useSSL=true&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true}
     username: ${SPRING_DATASOURCE_USERNAME:4MuZ4xB7AZaMJPA.root}
     password: ${SPRING_DATASOURCE_PASSWORD:thYm8pWX353ToZud}
+  jackson:
+    time-zone: Asia/Ho_Chi_Minh
   jpa:
     hibernate:
       ddl-auto: validate   # schema.sql is the source of truth; JPA only validates

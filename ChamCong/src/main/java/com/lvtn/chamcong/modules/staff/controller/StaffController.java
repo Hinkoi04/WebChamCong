@@ -63,13 +63,32 @@ public class StaffController {
         return ResponseEntity.ok(staffService.registerFace(orgId, request));
     }
 
+    @PostMapping("/{id}/face-validate")
+    public ResponseEntity<java.util.Map<String, Object>> validateFace(
+            @PathVariable("orgId") Long orgId,
+            @PathVariable("id") Long staffId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "pose", required = false) String pose) throws IOException {
+        return ResponseEntity.ok(staffService.validateFace(orgId, staffId, file, pose));
+    }
+
     @PostMapping("/{id}/face-upload")
     public ResponseEntity<FaceDataResponse> uploadAndRegisterFace(
             @PathVariable("orgId") Long orgId,
             @PathVariable("id") Long staffId,
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "replace", defaultValue = "false") boolean replace) throws IOException {
-        return ResponseEntity.ok(staffService.uploadAndRegisterFace(orgId, staffId, file, replace));
+            @RequestParam(value = "replace", defaultValue = "false") boolean replace,
+            @RequestParam(value = "pose", required = false) String pose) throws IOException {
+        return ResponseEntity.ok(staffService.uploadAndRegisterFace(orgId, staffId, file, replace, pose));
+    }
+
+    @PostMapping("/{id}/face-batch-upload")
+    public ResponseEntity<List<FaceDataResponse>> batchUploadAndRegisterFaces(
+            @PathVariable("orgId") Long orgId,
+            @PathVariable("id") Long staffId,
+            @RequestParam("files") List<MultipartFile> files,
+            @RequestParam(value = "poses", required = false) List<String> poses) throws IOException {
+        return ResponseEntity.ok(staffService.batchUploadAndRegisterFaces(orgId, staffId, files, poses));
     }
 
     @GetMapping("/{id}/faces")

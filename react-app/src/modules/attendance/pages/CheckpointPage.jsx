@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { attendanceService } from '../services/attendanceService';
-import { Camera, ScanFace, Keyboard, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Camera, ScanFace, Keyboard, ArrowLeft, CheckCircle2, AlertCircle, FlipHorizontal } from 'lucide-react';
 
 import { useToast } from '../../../contexts/ToastContext';
 
@@ -40,6 +40,7 @@ function speakGreeting(name) {
 export default function CheckpointPage() {
   const [staffId, setStaffId] = useState('');
   const [mode, setMode] = useState('face'); // 'face' or 'manual'
+  const [isMirrored, setIsMirrored] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -94,13 +95,22 @@ export default function CheckpointPage() {
   const captureImage = () => {
     if (!videoRef.current || !canvasRef.current) return null;
     const video = videoRef.current;
+    if (video.videoWidth === 0 || video.videoHeight === 0) return null;
+
     const canvas = canvasRef.current;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    const maxWidth = 720;
+    const scale = Math.min(1, maxWidth / video.videoWidth);
+    const targetWidth = Math.round(video.videoWidth * scale);
+    const targetHeight = Math.round(video.videoHeight * scale);
+
+    if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+    }
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
     // Convert to base64 jpeg
-    return canvas.toDataURL('image/jpeg', 0.8);
+    return canvas.toDataURL('image/jpeg', 0.85);
   };
 
   const handleCheckIn = async (e) => {
@@ -227,8 +237,19 @@ export default function CheckpointPage() {
                     autoPlay 
                     playsInline 
                     muted 
-                    className={`w-full h-full object-cover transition-opacity duration-300 ${scanning ? 'opacity-50' : 'opacity-100'} ${!stream ? 'hidden' : ''}`}
+                    className={`w-full h-full object-cover will-change-transform transform-gpu ${
+                      isMirrored ? '-scale-x-100' : ''
+                    } ${!stream ? 'hidden' : ''}`}
                   />
+                  {/* Mirror Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsMirrored(prev => !prev)}
+                    title={isMirrored ? 'Đang bật lật ảnh gương (Selfie). Nhấn để tắt' : 'Đang tắt lật ảnh gương. Nhấn để bật'}
+                    className="absolute top-3 right-3 z-10 p-2.5 rounded-xl bg-black/60 hover:bg-black/80 text-zinc-300 hover:text-white border border-white/10 backdrop-blur-md transition-all cursor-pointer shadow-lg"
+                  >
+                    <FlipHorizontal className="w-4 h-4" />
+                  </button>
                   {!stream && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-500">
                       <Camera className="w-12 h-12 mb-3 opacity-20" />

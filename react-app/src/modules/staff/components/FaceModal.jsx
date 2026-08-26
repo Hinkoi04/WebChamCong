@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   X, UploadCloud, Camera, Image as ImageIcon, Video, CheckCircle2, 
-  Sparkles, RefreshCw, Check, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, RotateCcw
+  Sparkles, RefreshCw, Check, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, RotateCcw,
+  FlipHorizontal
 } from 'lucide-react';
 import { staffService } from '../services/staffService';
 import { useToast } from '../../../contexts/ToastContext';
@@ -11,7 +12,7 @@ const FACE_STEPS = [
     id: 1,
     key: 'front',
     label: 'Chính diện',
-    badge: '🟢 Góc 1/5',
+    badge: '🟢 Góc 1/3',
     title: 'Nhìn thẳng chính diện',
     hint: 'Giữ khuôn mặt cân bằng và nhìn trực tiếp vào camera',
     direction: 'center',
@@ -23,9 +24,9 @@ const FACE_STEPS = [
     id: 2,
     key: 'left',
     label: 'Nghiêng trái',
-    badge: '🔵 Góc 2/5',
+    badge: '🔵 Góc 2/3',
     title: 'Nghiêng nhẹ sang trái',
-    hint: 'Xoay đầu nhẹ sang phía bên trái (khoảng 15-20 độ)',
+    hint: 'Quay mặt sang bên TRÁI của bạn (khoảng 15-25 độ)',
     direction: 'left',
     badgeStyle: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
     ringStyle: 'border-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.4)]',
@@ -35,53 +36,31 @@ const FACE_STEPS = [
     id: 3,
     key: 'right',
     label: 'Nghiêng phải',
-    badge: '🟣 Góc 3/5',
+    badge: '🟣 Góc 3/3',
     title: 'Nghiêng nhẹ sang phải',
-    hint: 'Xoay đầu nhẹ sang phía bên phải (khoảng 15-20 độ)',
+    hint: 'Quay mặt sang bên PHẢI của bạn (khoảng 15-25 độ)',
     direction: 'right',
     badgeStyle: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
     ringStyle: 'border-purple-400 shadow-[0_0_25px_rgba(168,85,247,0.4)]',
     laserStyle: 'from-transparent via-purple-400 to-transparent shadow-[0_0_8px_#c084fc]',
-  },
-  {
-    id: 4,
-    key: 'up',
-    label: 'Ngước lên',
-    badge: '🟡 Góc 4/5',
-    title: 'Ngước nhẹ lên trên',
-    hint: 'Hơi nâng cằm hướng lên phía trên một chút',
-    direction: 'up',
-    badgeStyle: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-    ringStyle: 'border-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.4)]',
-    laserStyle: 'from-transparent via-amber-400 to-transparent shadow-[0_0_8px_#fbbf24]',
-  },
-  {
-    id: 5,
-    key: 'down',
-    label: 'Cúi xuống',
-    badge: '🟠 Góc 5/5',
-    title: 'Hơi cúi nhẹ xuống',
-    hint: 'Hơi cúi cằm hướng xuống phía dưới một chút',
-    direction: 'down',
-    badgeStyle: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
-    ringStyle: 'border-orange-400 shadow-[0_0_25px_rgba(249,115,22,0.4)]',
-    laserStyle: 'from-transparent via-orange-400 to-transparent shadow-[0_0_8px_#fb923c]',
   },
 ];
 
 export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
   const { showToast } = useToast();
   const [mode, setMode] = useState('camera'); // 'camera' | 'upload'
+  const [isMirrored, setIsMirrored] = useState(true);
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState('');
   const [stream, setStream] = useState(null);
 
-  // 5-Step Enrollment State
+  // 3-Step Enrollment State
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const currentStepIndexRef = useRef(0); // Dùng Ref để tránh stale closure trong setInterval
 
-  const [completedSteps, setCompletedSteps] = useState([false, false, false, false, false]);
-  const [stepPreviews, setStepPreviews] = useState(['', '', '', '', '']);
+  const [completedSteps, setCompletedSteps] = useState([false, false, false]);
+  const [stepPreviews, setStepPreviews] = useState(['', '', '']);
+  const capturedFramesRef = useRef([null, null, null]);
   
   // AI Scanning States (State + Ref để hoàn toàn loại bỏ re-render loop)
   const [aiStatus, setAiStatus] = useState('idle'); // 'idle' | 'detecting' | 'processing' | 'step_success' | 'all_success' | 'error'
@@ -118,13 +97,14 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
     isProcessingRef.current = false;
   }, []);
 
-  // Reset quy trình đăng ký 5 bước
+  // Reset quy trình đăng ký 3 bước
   const resetEnrollment = useCallback(() => {
     currentStepIndexRef.current = 0;
     setCurrentStepIndex(0);
-    setCompletedSteps([false, false, false, false, false]);
-    setStepPreviews(['', '', '', '', '']);
-    updateAiStatus('detecting', 'Đang khởi động quy trình đăng ký 5 góc...');
+    setCompletedSteps([false, false, false]);
+    setStepPreviews(['', '', '']);
+    capturedFramesRef.current = [null, null, null];
+    updateAiStatus('detecting', 'Đang khởi động quy trình đăng ký 3 góc...');
     isProcessingRef.current = false;
   }, [updateAiStatus]);
 
@@ -135,10 +115,17 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
     if (video.videoWidth === 0 || video.videoHeight === 0) return null;
 
     const canvas = canvasRef.current;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    const maxWidth = 720;
+    const scale = Math.min(1, maxWidth / video.videoWidth);
+    const targetWidth = Math.round(video.videoWidth * scale);
+    const targetHeight = Math.round(video.videoHeight * scale);
+
+    if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+    }
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
 
     const stepIdx = currentStepIndexRef.current;
     return new Promise((resolve) => {
@@ -146,11 +133,11 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
         if (!blob) return resolve(null);
         const capturedFile = new File([blob], `staff_${staff?.id}_step${stepIdx + 1}.jpg`, { type: 'image/jpeg' });
         resolve(capturedFile);
-      }, 'image/jpeg', 0.92);
+      }, 'image/jpeg', 0.9);
     });
   }, [staff]);
 
-  // Vòng lặp gửi frame tới AI để kiểm tra và tự động lưu góc hiện tại
+  // Vòng lặp gửi frame tới AI để kiểm tra và chỉ lưu khi hoàn tất đủ 3 góc
   const runAiDetection = useCallback(async () => {
     if (!isOpen || isProcessingRef.current || !orgId || !staff || aiStatusRef.current === 'all_success' || aiStatusRef.current === 'step_success') return;
 
@@ -162,15 +149,14 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
     if (!frameFile) return;
 
     isProcessingRef.current = true;
-    updateAiStatus('processing', `AI đang phân tích & lưu góc ${currentStep.id}/5: ${currentStep.label}...`);
+    updateAiStatus('processing', `AI đang phân tích góc ${currentStep.id}/3: ${currentStep.label}...`);
 
     try {
-      // Ở bước 1 (stepIdx === 0): replace = true (vô hiệu hoá các vector cũ)
-      // Ở bước 2..5 (stepIdx > 0): replace = false (tích luỹ thêm vector góc mới)
-      const isReplace = stepIdx === 0;
-      await staffService.uploadFace(orgId, staff.id, frameFile, isReplace);
+      // 1. Xác thực tính hợp lệ của góc ảnh (kiểm tra hướng mặt + bẫy trùng lặp mà KHÔNG ghi vào DB)
+      await staffService.validateFace(orgId, staff.id, frameFile, currentStep.direction);
 
-      // Đã lưu góc thành công!
+      // Lưu file ảnh vào bộ nhớ đệm
+      capturedFramesRef.current[stepIdx] = frameFile;
       const frameUrl = URL.createObjectURL(frameFile);
       
       setCompletedSteps((prev) => {
@@ -191,17 +177,23 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
         currentStepIndexRef.current = nextIdx;
         setCurrentStepIndex(nextIdx);
         
-        updateAiStatus('step_success', `✅ Đã lưu ${currentStep.label}! Hãy ${FACE_STEPS[nextIdx].hint}...`);
+        updateAiStatus('step_success', `✅ Đã nhận diện ${currentStep.label}! Hãy ${FACE_STEPS[nextIdx].hint}...`);
 
         setTimeout(() => {
-          updateAiStatus('detecting', `AI đang quét góc ${FACE_STEPS[nextIdx].id}/5: ${FACE_STEPS[nextIdx].title}...`);
+          updateAiStatus('detecting', `AI đang quét góc ${FACE_STEPS[nextIdx].id}/3: ${FACE_STEPS[nextIdx].title}...`);
           isProcessingRef.current = false;
-        }, 1200);
+        }, 1400);
       } else {
-        // HOÀN TẤT ĐỦ 5 GÓC!
-        updateAiStatus('all_success', '🎉 Đã hoàn tất đăng ký đủ 5 góc khuôn mặt!');
+        // ĐÃ HOÀN TẤT ĐỦ 3 GÓC -> TIẾN HÀNH LƯU ĐỒNG THỜI CẢ 3 GÓC VÀO HỆ THỐNG
+        updateAiStatus('processing', '🎉 Đang hoàn tất và lưu bộ 3 góc khuôn mặt vào hệ thống...');
+        
+        const allFiles = capturedFramesRef.current.filter(Boolean);
+        const allPoses = FACE_STEPS.map((s) => s.direction);
+        await staffService.batchUploadFaces(orgId, staff.id, allFiles, allPoses);
+
+        updateAiStatus('all_success', '🎉 Đã hoàn tất đăng ký đủ 3 góc khuôn mặt!');
         stopCamera();
-        showToast(`Đã tự động thu thập và đăng ký 5 góc khuôn mặt cho ${staff.fullName}`, 'success');
+        showToast(`Đã tự động thu thập và đăng ký 3 góc khuôn mặt cho ${staff.fullName}`, 'success');
 
         setTimeout(() => {
           if (onSuccess) onSuccess();
@@ -210,11 +202,12 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
       }
     } catch (err) {
       const backendMsg = err.response?.data?.message || err.response?.data?.detail;
-      let msg = `Đang căn chỉnh góc ${currentStep.label} với AI...`;
-      if (backendMsg && backendMsg.includes('Không tìm thấy khuôn mặt')) {
-        msg = `Chưa phát hiện góc ${currentStep.label}, vui lòng căn chỉnh theo hướng dẫn`;
+      if (backendMsg) {
+        updateAiStatus('error', `⚠️ ${backendMsg}`);
+        showToast(backendMsg, 'warning');
+      } else {
+        updateAiStatus('detecting', `Chưa phát hiện góc ${currentStep.label}, vui lòng căn chỉnh theo hướng dẫn`);
       }
-      updateAiStatus('detecting', msg);
       isProcessingRef.current = false;
     }
   }, [isOpen, orgId, staff, captureFrame, stopCamera, showToast, onSuccess, onClose, updateAiStatus]);
@@ -242,7 +235,7 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
 
       // Đợi camera ổn định rồi bắt đầu quét AI tự động mỗi 2.2 giây
       setTimeout(() => {
-        updateAiStatus('detecting', `AI đang tự động quét góc 1/5: Nhìn thẳng chính diện...`);
+        updateAiStatus('detecting', `AI đang tự động quét góc 1/3: Nhìn thẳng chính diện...`);
         if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
         scanIntervalRef.current = setInterval(() => {
           runAiDetectionRef.current();
@@ -322,9 +315,9 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
             </div>
             <div>
               <h3 className="text-base font-bold text-zinc-100 flex items-center gap-2">
-                Đăng ký 5 góc khuôn mặt AI
+                Đăng ký 3 góc khuôn mặt AI
                 <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                  Best-Match AI
+                  Multi-Angle AI
                 </span>
               </h3>
               <p className="text-xs text-zinc-400 mt-0.5">
@@ -351,7 +344,7 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
             }`}
           >
-            <Video className="w-4 h-4" /> Quét 5 góc tự động (AI Scan)
+            <Video className="w-4 h-4" /> Quét 3 góc tự động (AI Scan)
           </button>
           <button
             type="button"
@@ -371,7 +364,7 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
           {mode === 'camera' ? (
             <div className="flex flex-col items-center gap-3.5">
 
-              {/* 5-Step Interactive Progress Bar */}
+              {/* 3-Step Interactive Progress Bar */}
               <div className="w-full bg-zinc-950/80 border border-zinc-800/90 rounded-2xl p-3 shadow-inner">
                 <div className="flex items-center justify-between gap-1 mb-2">
                   {FACE_STEPS.map((step, idx) => {
@@ -403,7 +396,7 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                   <div 
                     className="h-full bg-gradient-to-r from-emerald-500 via-violet-500 to-indigo-500 transition-all duration-500"
                     style={{ 
-                      width: `${aiStatus === 'all_success' ? 100 : (completedSteps.filter(Boolean).length / 5) * 100}%` 
+                      width: `${aiStatus === 'all_success' ? 100 : (completedSteps.filter(Boolean).length / 3) * 100}%` 
                     }}
                   />
                 </div>
@@ -431,18 +424,28 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                   autoPlay
                   playsInline
                   muted
-                  className={`w-full h-full object-cover transition-opacity duration-300 ${
-                    aiStatus === 'all_success' ? 'opacity-25' : 'opacity-100'
-                  }`}
+                  className={`w-full h-full object-cover will-change-transform transform-gpu ${
+                    isMirrored ? '-scale-x-100' : ''
+                  } ${aiStatus === 'all_success' ? 'opacity-25' : 'opacity-100'}`}
                 />
                 <canvas ref={canvasRef} className="hidden" />
 
-                {/* AI Target Biometric Oval Frame with Dynamic Directional Cue */}
+                {/* Mirror Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsMirrored(prev => !prev)}
+                  title={isMirrored ? 'Đang bật lật ảnh gương (Selfie). Nhấn để tắt' : 'Đang tắt lật ảnh gương. Nhấn để bật'}
+                  className="absolute top-3 right-3 z-10 p-2 rounded-xl bg-black/60 hover:bg-black/80 text-zinc-300 hover:text-white border border-white/10 backdrop-blur-md transition-all cursor-pointer shadow-lg"
+                >
+                  <FlipHorizontal className="w-4 h-4" />
+                </button>
+
+                {/* AI Target Biometric Oval Frame with Dynamic Directional Cue - Không dùng scale để tránh giật khung hình */}
                 {aiStatus !== 'all_success' && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className={`relative w-48 h-60 sm:w-56 sm:h-72 rounded-[45%] border-2 border-dashed transition-all duration-500 ${
+                    <div className={`relative w-48 h-60 sm:w-56 sm:h-72 rounded-[45%] border-2 border-dashed transition-colors duration-300 ${
                       aiStatus === 'processing' || aiStatus === 'step_success'
-                        ? 'border-violet-400 scale-105 shadow-[0_0_35px_rgba(139,92,246,0.6)]'
+                        ? 'border-violet-400 shadow-[0_0_35px_rgba(139,92,246,0.6)]'
                         : activeStep.ringStyle
                     }`}>
                       
@@ -461,18 +464,6 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                           <div className="flex items-center gap-1 text-purple-400 animate-[bounceRight_1s_infinite]">
                             <span className="text-xs font-bold uppercase tracking-wider">Phải</span>
                             <ArrowRight className="w-12 h-12 stroke-[2.5]" />
-                          </div>
-                        )}
-                        {activeStep.direction === 'up' && (
-                          <div className="flex flex-col items-center gap-1 text-amber-400 animate-[bounceUp_1s_infinite]">
-                            <ArrowUp className="w-12 h-12 stroke-[2.5]" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider">Ngước lên</span>
-                          </div>
-                        )}
-                        {activeStep.direction === 'down' && (
-                          <div className="flex flex-col items-center gap-1 text-orange-400 animate-[bounceDown_1s_infinite]">
-                            <span className="text-[10px] font-bold uppercase tracking-wider">Cúi xuống</span>
-                            <ArrowDown className="w-12 h-12 stroke-[2.5]" />
                           </div>
                         )}
                         {activeStep.direction === 'center' && (
@@ -498,9 +489,9 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                     <div className="w-20 h-20 bg-emerald-500/20 border-2 border-emerald-400 rounded-full flex items-center justify-center mb-3 shadow-[0_0_40px_rgba(16,185,129,0.5)]">
                       <CheckCircle2 className="w-12 h-12 text-emerald-400 animate-bounce" />
                     </div>
-                    <h4 className="text-xl font-extrabold text-emerald-300">ĐÃ HOÀN TẤT 5 GÓC KHUÔN MẶT!</h4>
+                    <h4 className="text-xl font-extrabold text-emerald-300">ĐÃ HOÀN TẤT 3 GÓC KHUÔN MẶT!</h4>
                     <p className="text-xs text-emerald-200/90 mt-1 max-w-xs">
-                      5 vector đặc trưng đã được lưu vào hệ thống. Kiosk có thể nhận diện nhân viên ở mọi tư thế đứng!
+                      3 vector đặc trưng (Chính diện, Trái, Phải) đã được lưu thành công. Kiosk AI có thể nhận diện cực nhanh và chuẩn xác!
                     </p>
                   </div>
                 )}
@@ -520,6 +511,8 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                   ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
                   : aiStatus === 'processing' || aiStatus === 'step_success'
                   ? 'bg-violet-500/10 border-violet-500/30 text-violet-300'
+                  : aiStatus === 'error'
+                  ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
                   : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-300'
               }`}>
                 {aiStatus === 'processing' ? (
@@ -613,8 +606,8 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
 
         {/* Footer info */}
         <div className="px-6 py-3 bg-zinc-950/80 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-500">
-          <span>AI Model: Facenet + RetinaFace / MTCNN</span>
-          <span>5-Vector Best Match ($\ge 0.58$)</span>
+          <span>AI Model: SFace + YuNet Detector</span>
+          <span>3-Vector Multi-Angle Match (Chính diện - Trái - Phải)</span>
         </div>
 
       </div>

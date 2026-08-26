@@ -19,6 +19,9 @@ public interface StaffService {
     FaceDataResponse registerFace(Long userId, FaceDataRequest request);
     FaceDataResponse uploadAndRegisterFace(Long userId, Long staffId, MultipartFile file) throws IOException;
     FaceDataResponse uploadAndRegisterFace(Long userId, Long staffId, MultipartFile file, boolean replace) throws IOException;
+    FaceDataResponse uploadAndRegisterFace(Long userId, Long staffId, MultipartFile file, boolean replace, String pose) throws IOException;
+    java.util.Map<String, Object> validateFace(Long userId, Long staffId, MultipartFile file, String pose) throws IOException;
+    List<FaceDataResponse> batchUploadAndRegisterFaces(Long userId, Long staffId, List<MultipartFile> files, List<String> poses) throws IOException;
     List<FaceDataResponse> getFaceDataList(Long userId, Long staffId);
 
     // Trash methods
