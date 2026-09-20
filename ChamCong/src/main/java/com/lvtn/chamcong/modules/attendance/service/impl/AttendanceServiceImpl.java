@@ -368,12 +368,13 @@ public class AttendanceServiceImpl implements AttendanceService {
             if (!staff.getUser().getId().equals(userId)) {
                 throw new BadRequestException("Truy cập trái phép vào thông tin nhân viên");
             }
-            return attendanceRepository.findByStaffIdAndWorkDateBetween(staffId, startDate, endDate).stream()
+            return attendanceRepository.findByStaffIdAndWorkDateBetweenWithStaff(staffId, startDate, endDate).stream()
                     .map(this::toResponse).collect(Collectors.toList());
         }
-        return attendanceRepository.findByStaff_User_IdAndWorkDateBetween(userId, startDate, endDate).stream()
-                .map(this::toResponse).collect(Collectors.toList());
+        return attendanceRepository.findByUserIdAndWorkDateBetweenWithStaff(userId, startDate, endDate).stream()
+                    .map(this::toResponse).collect(Collectors.toList());
     }
+
 
     @Override
     public byte[] exportAttendanceExcel(Long userId, Long staffId, LocalDate startDate, LocalDate endDate) {

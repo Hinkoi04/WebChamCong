@@ -1,5 +1,9 @@
 server:
   port: ${PORT:8080}
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/xml,text/plain,application/xml
+    min-response-size: 1024
 
 spring:
   application:
@@ -9,9 +13,16 @@ spring:
       mode: always
       continue-on-error: true
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://gateway01.ap-southeast-1.prod.aws.tidbcloud.com:4000/attendance_saas?useSSL=true&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://gateway01.ap-southeast-1.prod.aws.tidbcloud.com:4000/attendance_saas?useSSL=true&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true&cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048&useServerPrepStmts=true}
     username: ${SPRING_DATASOURCE_USERNAME:4MuZ4xB7AZaMJPA.root}
     password: ${SPRING_DATASOURCE_PASSWORD:thYm8pWX353ToZud}
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 20000
+      max-lifetime: 1800000
+      keepalive-time: 30000
   jackson:
     time-zone: Asia/Ho_Chi_Minh
   jpa:
@@ -20,8 +31,14 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
+        default_batch_fetch_size: 50
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
     open-in-view: false
+
 
 cloudinary:
   url: ${CLOUDINARY_URL:cloudinary://219384734294611:LCRo7DgLUbq7zjYdp1EeuvrxjHY@qloyjjtg}

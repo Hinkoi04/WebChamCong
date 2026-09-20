@@ -35,6 +35,7 @@ import com.lvtn.chamcong.common.service.FaceVectorCacheService;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -60,6 +61,11 @@ public class StaffServiceImpl implements StaffService {
     private final ObjectMapper objectMapper;
 
     private StaffResponse convertToResponse(Staff staff) {
+        boolean faceRegistered = !faceDataRepository.findByStaffIdAndIsActiveTrue(staff.getId()).isEmpty();
+        return convertToResponse(staff, faceRegistered);
+    }
+
+    private StaffResponse convertToResponse(Staff staff, boolean faceRegistered) {
         StaffResponse response = modelMapper.map(staff, StaffResponse.class);
         if (staff.getPosition() != null) {
             response.setPositionId(staff.getPosition().getId());
@@ -75,9 +81,10 @@ public class StaffServiceImpl implements StaffService {
             response.setDepartmentId(null);
             response.setDepartment(null);
         }
-        response.setFaceRegistered(!faceDataRepository.findByStaffIdAndIsActiveTrue(staff.getId()).isEmpty());
+        response.setFaceRegistered(faceRegistered);
         return response;
     }
+
 
     @Override
     @Transactional
@@ -214,7 +221,7 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public StaffResponse getStaffById(Long userId, Long staffId) {
         SecurityUtils.validateTenantAccess(userId);
-        Staff staff = staffRepository.findById(staffId)
+        Staff staff = staffRepository.findByIdWithDetails(staffId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy nhân viên"));
 
         if (!staff.getUser().getId().equals(userId) || staff.getIsDeleted()) {
@@ -227,10 +234,16 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public List<StaffResponse> getAllStaff(Long userId) {
         SecurityUtils.validateTenantAccess(userId);
-        return staffRepository.findByUserIdAndIsDeletedFalse(userId).stream()
-                .map(this::convertToResponse)
+        List<Staff> staffList = staffRepository.findByUserIdAndIsDeletedFalse(userId);
+        if (staffList.isEmpty()) {
+            return List.of();
+        }
+        Set<Long> registeredFaceStaffIds = faceDataRepository.findActiveStaffIdsByUserId(userId);
+        return staffList.stream()
+                .map(staff -> convertToResponse(staff, registeredFaceStaffIds.contains(staff.getId())))
                 .collect(Collectors.toList());
     }
+
 
     @Override
     @Transactional
@@ -511,10 +524,16 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public List<StaffResponse> getTrashStaff(Long userId) {
         SecurityUtils.validateTenantAccess(userId);
-        return staffRepository.findByUserIdAndIsDeletedTrue(userId).stream()
-                .map(this::convertToResponse)
+        List<Staff> staffList = staffRepository.findByUserIdAndIsDeletedTrue(userId);
+        if (staffList.isEmpty()) {
+            return List.of();
+        }
+        Set<Long> registeredFaceStaffIds = faceDataRepository.findActiveStaffIdsByUserId(userId);
+        return staffList.stream()
+                .map(staff -> convertToResponse(staff, registeredFaceStaffIds.contains(staff.getId())))
                 .collect(Collectors.toList());
     }
+
 
     @Override
     @Transactional

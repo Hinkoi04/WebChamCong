@@ -28,6 +28,14 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     Optional<Attendance> findByStaffIdAndWorkDate(Long staffId, LocalDate workDate);
     List<Attendance> findByStaffIdAndWorkDateBetween(Long staffId, LocalDate startDate, LocalDate endDate);
     List<Attendance> findByStaff_User_IdAndWorkDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
+
+    @Query("SELECT a FROM Attendance a JOIN FETCH a.staff s WHERE s.user.id = :userId AND a.workDate BETWEEN :startDate AND :endDate ORDER BY a.workDate DESC, a.createdAt DESC")
+    List<Attendance> findByUserIdAndWorkDateBetweenWithStaff(@Param("userId") Long userId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT a FROM Attendance a JOIN FETCH a.staff s WHERE s.id = :staffId AND a.workDate BETWEEN :startDate AND :endDate ORDER BY a.workDate DESC, a.createdAt DESC")
+    List<Attendance> findByStaffIdAndWorkDateBetweenWithStaff(@Param("staffId") Long staffId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
     List<Attendance> findByWorkDateBetween(LocalDate startDate, LocalDate endDate);
     void deleteByStaffId(Long staffId);
 }
+
