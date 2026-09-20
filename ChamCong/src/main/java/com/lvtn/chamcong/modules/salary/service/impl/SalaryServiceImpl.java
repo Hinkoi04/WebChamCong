@@ -60,9 +60,11 @@ public class SalaryServiceImpl implements SalaryService {
     private BigDecimal calculateBaseEarnedSalary(Staff staff, int month, int year, WorkSchedule schedule, int standardDays) {
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
-
         List<Attendance> attendances = attendanceRepository.findByStaffIdAndWorkDateBetween(staff.getId(), startDate, endDate);
+        return calculateBaseEarnedSalaryFromAttendances(staff, schedule, standardDays, attendances);
+    }
 
+    private BigDecimal calculateBaseEarnedSalaryFromAttendances(Staff staff, WorkSchedule schedule, int standardDays, List<Attendance> attendances) {
         LocalTime startTime = (schedule != null && schedule.getStartTime() != null) ? schedule.getStartTime() : LocalTime.of(8, 0);
         LocalTime endTime = (schedule != null && schedule.getEndTime() != null) ? schedule.getEndTime() : LocalTime.of(17, 0);
 
@@ -82,22 +84,24 @@ public class SalaryServiceImpl implements SalaryService {
 
         BigDecimal totalEarned = BigDecimal.ZERO;
 
-        for (Attendance att : attendances) {
-            if (att.getStatus() == AttendanceStatus.ON_TIME || att.getStatus() == AttendanceStatus.LATE) {
-                // Ngày đi làm đầy đủ
-                totalEarned = totalEarned.add(dailyRate);
-            } else if (att.getStatus() == AttendanceStatus.EARLY_LEAVE || att.getStatus() == AttendanceStatus.LATE_AND_EARLY_LEAVE) {
-                // Ngày về sớm: LCB / 26 / (Số giờ ca làm) * số giờ làm thực tế
-                LocalDateTime checkIn = att.getCheckInTime() != null ? att.getCheckInTime() : att.getWorkDate().atTime(startTime);
-                LocalDateTime checkOut = att.getCheckOutTime() != null ? att.getCheckOutTime() : att.getWorkDate().atTime(endTime);
+        if (attendances != null) {
+            for (Attendance att : attendances) {
+                if (att.getStatus() == AttendanceStatus.ON_TIME || att.getStatus() == AttendanceStatus.LATE) {
+                    // Ngày đi làm đầy đủ
+                    totalEarned = totalEarned.add(dailyRate);
+                } else if (att.getStatus() == AttendanceStatus.EARLY_LEAVE || att.getStatus() == AttendanceStatus.LATE_AND_EARLY_LEAVE) {
+                    // Ngày về sớm: LCB / 26 / (Số giờ ca làm) * số giờ làm thực tế
+                    LocalDateTime checkIn = att.getCheckInTime() != null ? att.getCheckInTime() : att.getWorkDate().atTime(startTime);
+                    LocalDateTime checkOut = att.getCheckOutTime() != null ? att.getCheckOutTime() : att.getWorkDate().atTime(endTime);
 
-                long workedMinutes = java.time.Duration.between(checkIn, checkOut).toMinutes();
-                if (workedMinutes < 0) workedMinutes = 0;
-                if (workedMinutes > shiftMinutes) workedMinutes = shiftMinutes;
-                double workedHours = workedMinutes / 60.0;
+                    long workedMinutes = java.time.Duration.between(checkIn, checkOut).toMinutes();
+                    if (workedMinutes < 0) workedMinutes = 0;
+                    if (workedMinutes > shiftMinutes) workedMinutes = shiftMinutes;
+                    double workedHours = workedMinutes / 60.0;
 
-                BigDecimal daySalary = hourlyRate.multiply(BigDecimal.valueOf(workedHours));
-                totalEarned = totalEarned.add(daySalary);
+                    BigDecimal daySalary = hourlyRate.multiply(BigDecimal.valueOf(workedHours));
+                    totalEarned = totalEarned.add(daySalary);
+                }
             }
         }
 
@@ -142,7 +146,7 @@ public class SalaryServiceImpl implements SalaryService {
         int standardDays = (schedule != null && schedule.getStandardDaysPerMonth() != null) ? schedule.getStandardDaysPerMonth() : 26;
 
         BigDecimal baseSalary = staff.getBaseSalary() != null ? staff.getBaseSalary() : BigDecimal.ZERO;
-        BigDecimal totalEarned = calculateBaseEarnedSalary(staff, request.getMonth(), request.getYear(), schedule, standardDays);
+        BigDecimal totalEarned = calculateBaseEarnedSalaryFromAttendances(staff, schedule, standardDays, attendances);
 
         Salary salary = salaryRepository.findByStaffIdAndMonthAndYear(staffId, request.getMonth(), request.getYear())
                 .orElse(null);
@@ -181,21 +185,38 @@ public class SalaryServiceImpl implements SalaryService {
     public List<SalaryResponse> calculateAllSalaries(Long userId, Integer month, Integer year) {
         SecurityUtils.validateTenantAccess(userId);
         List<Staff> staffList = staffRepository.findByUserIdAndIsDeletedFalse(userId);
+        if (staffList.isEmpty()) {
+            return List.of();
+        }
         
         WorkSchedule schedule = workScheduleRepository.findByUserIdAndIsDefaultTrue(userId).orElse(null);
         int standardDays = (schedule != null && schedule.getStandardDaysPerMonth() != null) ? schedule.getStandardDaysPerMonth() : 26;
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
+        // 1. Batch pre-fetch all attendances for the entire organization in this month/year (1 query)
+        List<Attendance> allAttendances = attendanceRepository.findByUserIdAndWorkDateBetweenWithStaff(userId, startDate, endDate);
+        java.util.Map<Long, List<Attendance>> attendancesByStaffId = allAttendances.stream()
+                .filter(a -> a.getStaff() != null)
+                .collect(Collectors.groupingBy(a -> a.getStaff().getId()));
+
+        // 2. Batch pre-fetch all existing salaries for this organization in this month/year (1 query)
+        List<Salary> existingSalaries = salaryRepository.findByUserIdAndMonthAndYearWithStaff(userId, month, year);
+        java.util.Map<Long, Salary> existingSalaryByStaffId = existingSalaries.stream()
+                .filter(s -> s.getStaff() != null)
+                .collect(Collectors.toMap(s -> s.getStaff().getId(), s -> s, (s1, s2) -> s1));
+
+        List<Salary> salariesToSave = new java.util.ArrayList<>();
+
         for (Staff staff : staffList) {
             // Không tính lại nếu đã CONFIRMED hoặc PAID
-            Salary existing = salaryRepository.findByStaffIdAndMonthAndYear(staff.getId(), month, year).orElse(null);
+            Salary existing = existingSalaryByStaffId.get(staff.getId());
             if (existing != null && existing.getStatus() != SalaryStatus.DRAFT) {
                 continue;
             }
 
-            List<Attendance> attendances = attendanceRepository.findByStaffIdAndWorkDateBetween(staff.getId(), startDate, endDate);
-            long workingDaysCount = attendances.stream()
+            List<Attendance> staffAttendances = attendancesByStaffId.getOrDefault(staff.getId(), List.of());
+            long workingDaysCount = staffAttendances.stream()
                     .filter(att -> att.getStatus() == AttendanceStatus.ON_TIME 
                                 || att.getStatus() == AttendanceStatus.LATE 
                                 || att.getStatus() == AttendanceStatus.EARLY_LEAVE
@@ -203,7 +224,7 @@ public class SalaryServiceImpl implements SalaryService {
                     .count();
 
             BigDecimal baseSalary = staff.getBaseSalary() != null ? staff.getBaseSalary() : BigDecimal.ZERO;
-            BigDecimal totalEarned = calculateBaseEarnedSalary(staff, month, year, schedule, standardDays);
+            BigDecimal totalEarned = calculateBaseEarnedSalaryFromAttendances(staff, schedule, standardDays, staffAttendances);
 
             if (existing == null) {
                 existing = Salary.builder()
@@ -230,7 +251,11 @@ public class SalaryServiceImpl implements SalaryService {
             existing.setStatus(SalaryStatus.DRAFT);
             existing.setCalculatedBy(userId);
 
-            salaryRepository.save(existing);
+            salariesToSave.add(existing);
+        }
+
+        if (!salariesToSave.isEmpty()) {
+            salaryRepository.saveAll(salariesToSave);
         }
 
         return getSalariesByMonthYear(userId, month, year);
@@ -277,17 +302,18 @@ public class SalaryServiceImpl implements SalaryService {
             throw new BadRequestException("Truy cập trái phép vào thông tin nhân viên");
         }
 
-        return salaryRepository.findByStaffId(staffId).stream()
+        return salaryRepository.findByStaffIdWithStaff(staffId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<SalaryResponse> getSalariesByMonthYear(Long userId, Integer month, Integer year) {
-        return salaryRepository.findByStaff_User_IdAndMonthAndYear(userId, month, year).stream()
+        return salaryRepository.findByUserIdAndMonthAndYearWithStaff(userId, month, year).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public byte[] exportSalaryExcel(Long userId, Integer month, Integer year) {
