@@ -9,14 +9,14 @@ function fmtDate(str) {
 }
 
 const actionColors = {
-  CREATE: 'text-emerald-400',
-  UPDATE: 'text-amber-400',
-  DELETE: 'text-red-400',
-  LOGIN: 'text-blue-400',
-  LOGOUT: 'text-zinc-400',
-  LOCK: 'text-red-400',
-  UNLOCK: 'text-emerald-400',
-  APPROVE: 'text-violet-400',
+  CREATE: 'text-emerald-600',
+  UPDATE: 'text-amber-600',
+  DELETE: 'text-rose-600',
+  LOGIN: 'text-blue-600',
+  LOGOUT: 'text-slate-500',
+  LOCK: 'text-rose-600',
+  UNLOCK: 'text-emerald-600',
+  APPROVE: 'text-indigo-600',
 };
 
 export default function AdminLogsPage() {
@@ -58,12 +58,12 @@ export default function AdminLogsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold text-zinc-100">Nhật ký hệ thống</h2>
-          <p className="text-xs text-zinc-500 mt-1 font-mono">{logs.length} sự kiện được ghi nhận</p>
+          <h2 className="text-lg font-bold text-slate-800">Nhật ký hệ thống</h2>
+          <p className="text-xs text-slate-500 mt-1 font-mono">{logs.length} sự kiện được ghi nhận</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               value={search}
               onChange={(e) => {
@@ -71,7 +71,7 @@ export default function AdminLogsPage() {
                 setCurrentPage(1);
               }}
               placeholder="Tìm theo hành động, loại actor..."
-              className="bg-zinc-900/60 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-violet-500/50 w-64 transition-all"
+              className="bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 w-64 shadow-xs transition-all"
             />
           </div>
           <button
@@ -79,7 +79,7 @@ export default function AdminLogsPage() {
               loadLogs();
               setCurrentPage(1);
             }}
-            className="w-9 h-9 flex items-center justify-center rounded-xl border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors bg-zinc-900/60 cursor-pointer"
+            className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors bg-white shadow-xs cursor-pointer"
             title="Tải lại"
           >
             <RefreshCw className="w-4 h-4" />
@@ -87,44 +87,44 @@ export default function AdminLogsPage() {
         </div>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-md">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-8 text-center text-sm text-zinc-500 font-medium">Đang tải nhật ký hệ thống...</div>
+            <div className="p-8 text-center text-sm text-slate-400 font-medium">Đang tải nhật ký hệ thống...</div>
           ) : (
-            <table className="w-full text-sm text-zinc-300">
+            <table className="w-full text-sm text-slate-700">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-800/10">
+                <tr className="border-b border-slate-200 bg-slate-50/75">
                   {['Loại actor', 'Actor ID', 'Hành động', 'Bảng dữ liệu', 'Mục tiêu ID', 'IP Address', 'Thời gian'].map((h) => (
-                    <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 whitespace-nowrap">
+                    <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/40">
+              <tbody className="divide-y divide-slate-100">
                 {paginatedLogs.map((l) => (
-                  <tr key={l.id} className="hover:bg-zinc-800/10 transition-colors">
+                  <tr key={l.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="px-5 py-4">
-                      <span className={`text-xs font-bold font-mono ${l.actorType === 'ADMIN' ? 'text-violet-400' : 'text-blue-400'}`}>
+                      <span className={`text-xs font-bold font-mono ${l.actorType === 'ADMIN' ? 'text-indigo-600' : 'text-blue-600'}`}>
                         {l.actorType || '—'}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-xs font-mono text-zinc-400">{l.actorId || '—'}</td>
+                    <td className="px-5 py-4 text-xs font-mono text-slate-500">{l.actorId || '—'}</td>
                     <td className="px-5 py-4">
-                      <span className={`text-xs font-bold font-mono ${actionColors[l.action] || 'text-zinc-300'}`}>
+                      <span className={`text-xs font-bold font-mono ${actionColors[l.action] || 'text-slate-700'}`}>
                         {l.action || '—'}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-xs text-zinc-400 font-mono">{l.targetTable || '—'}</td>
-                    <td className="px-5 py-4 text-xs text-zinc-500 font-mono">{l.targetId || '—'}</td>
-                    <td className="px-5 py-4 text-xs text-zinc-500 font-mono">{l.ipAddress || '—'}</td>
-                    <td className="px-5 py-4 text-xs text-zinc-400 font-mono whitespace-nowrap">{fmtDate(l.createdAt)}</td>
+                    <td className="px-5 py-4 text-xs text-slate-700 font-mono">{l.targetTable || '—'}</td>
+                    <td className="px-5 py-4 text-xs text-slate-500 font-mono">{l.targetId || '—'}</td>
+                    <td className="px-5 py-4 text-xs text-slate-500 font-mono">{l.ipAddress || '—'}</td>
+                    <td className="px-5 py-4 text-xs text-slate-500 font-mono whitespace-nowrap">{fmtDate(l.createdAt)}</td>
                   </tr>
                 ))}
                 {shown.length === 0 && !loading && (
                   <tr>
-                    <td colSpan="7" className="p-8 text-center text-sm text-zinc-500 font-medium">
+                    <td colSpan="7" className="p-8 text-center text-sm text-slate-400 font-medium">
                       {search ? 'Không tìm thấy kết quả phù hợp.' : 'Chưa có nhật ký nào trong hệ thống.'}
                     </td>
                   </tr>

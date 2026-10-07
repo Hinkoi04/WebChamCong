@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   X, UploadCloud, Camera, Image as ImageIcon, Video, CheckCircle2, 
-  Sparkles, RefreshCw, Check, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, RotateCcw,
+  Sparkles, RefreshCw, Check, ArrowLeft, ArrowRight, RotateCcw,
   FlipHorizontal
 } from 'lucide-react';
 import { staffService } from '../services/staffService';
@@ -16,8 +16,8 @@ const FACE_STEPS = [
     title: 'Nhìn thẳng chính diện',
     hint: 'Giữ khuôn mặt cân bằng và nhìn trực tiếp vào camera',
     direction: 'center',
-    badgeStyle: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-    ringStyle: 'border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.4)]',
+    badgeStyle: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    ringStyle: 'border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]',
     laserStyle: 'from-transparent via-emerald-400 to-transparent shadow-[0_0_8px_#34d399]',
   },
   {
@@ -28,8 +28,8 @@ const FACE_STEPS = [
     title: 'Nghiêng nhẹ sang trái',
     hint: 'Quay mặt sang bên TRÁI của bạn (khoảng 15-25 độ)',
     direction: 'left',
-    badgeStyle: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-    ringStyle: 'border-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.4)]',
+    badgeStyle: 'bg-blue-50 text-blue-700 border-blue-200',
+    ringStyle: 'border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]',
     laserStyle: 'from-transparent via-blue-400 to-transparent shadow-[0_0_8px_#60a5fa]',
   },
   {
@@ -40,8 +40,8 @@ const FACE_STEPS = [
     title: 'Nghiêng nhẹ sang phải',
     hint: 'Quay mặt sang bên PHẢI của bạn (khoảng 15-25 độ)',
     direction: 'right',
-    badgeStyle: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-    ringStyle: 'border-purple-400 shadow-[0_0_25px_rgba(168,85,247,0.4)]',
+    badgeStyle: 'bg-purple-50 text-purple-700 border-purple-200',
+    ringStyle: 'border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]',
     laserStyle: 'from-transparent via-purple-400 to-transparent shadow-[0_0_8px_#c084fc]',
   },
 ];
@@ -56,14 +56,14 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
 
   // 3-Step Enrollment State
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const currentStepIndexRef = useRef(0); // Dùng Ref để tránh stale closure trong setInterval
+  const currentStepIndexRef = useRef(0);
 
   const [completedSteps, setCompletedSteps] = useState([false, false, false]);
   const [stepPreviews, setStepPreviews] = useState(['', '', '']);
   const capturedFramesRef = useRef([null, null, null]);
   
-  // AI Scanning States (State + Ref để hoàn toàn loại bỏ re-render loop)
-  const [aiStatus, setAiStatus] = useState('idle'); // 'idle' | 'detecting' | 'processing' | 'step_success' | 'all_success' | 'error'
+  // AI Scanning States
+  const [aiStatus, setAiStatus] = useState('idle');
   const aiStatusRef = useRef('idle');
   const [statusMessage, setStatusMessage] = useState('Vui lòng nhìn thẳng vào camera');
 
@@ -83,7 +83,6 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
     if (message) setStatusMessage(message);
   }, []);
 
-  // Dừng camera và dọn dẹp interval
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
@@ -97,7 +96,6 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
     isProcessingRef.current = false;
   }, []);
 
-  // Reset quy trình đăng ký 3 bước
   const resetEnrollment = useCallback(() => {
     currentStepIndexRef.current = 0;
     setCurrentStepIndex(0);
@@ -108,7 +106,6 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
     isProcessingRef.current = false;
   }, [updateAiStatus]);
 
-  // Chụp một frame từ video hiện tại
   const captureFrame = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return null;
     const video = videoRef.current;
@@ -137,7 +134,6 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
     });
   }, [staff]);
 
-  // Vòng lặp gửi frame tới AI để kiểm tra và chỉ lưu khi hoàn tất đủ 3 góc
   const runAiDetection = useCallback(async () => {
     if (!isOpen || isProcessingRef.current || !orgId || !staff || aiStatusRef.current === 'all_success' || aiStatusRef.current === 'step_success') return;
 
@@ -152,10 +148,8 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
     updateAiStatus('processing', `AI đang phân tích góc ${currentStep.id}/3: ${currentStep.label}...`);
 
     try {
-      // 1. Xác thực tính hợp lệ của góc ảnh (kiểm tra hướng mặt + bẫy trùng lặp mà KHÔNG ghi vào DB)
       await staffService.validateFace(orgId, staff.id, frameFile, currentStep.direction);
 
-      // Lưu file ảnh vào bộ nhớ đệm
       capturedFramesRef.current[stepIdx] = frameFile;
       const frameUrl = URL.createObjectURL(frameFile);
       
@@ -172,7 +166,6 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
       });
 
       if (stepIdx < FACE_STEPS.length - 1) {
-        // Chuyển sang bước tiếp theo
         const nextIdx = stepIdx + 1;
         currentStepIndexRef.current = nextIdx;
         setCurrentStepIndex(nextIdx);
@@ -184,7 +177,6 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
           isProcessingRef.current = false;
         }, 1400);
       } else {
-        // ĐÃ HOÀN TẤT ĐỦ 3 GÓC -> TIẾN HÀNH LƯU ĐỒNG THỜI CẢ 3 GÓC VÀO HỆ THỐNG
         updateAiStatus('processing', '🎉 Đang hoàn tất và lưu bộ 3 góc khuôn mặt vào hệ thống...');
         
         const allFiles = capturedFramesRef.current.filter(Boolean);
@@ -217,7 +209,6 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
     runAiDetectionRef.current = runAiDetection;
   }, [runAiDetection]);
 
-  // Khởi động Camera
   const startCamera = useCallback(async () => {
     setFile(null);
     setPreview('');
@@ -233,7 +224,6 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
         videoRef.current.srcObject = mediaStream;
       }
 
-      // Đợi camera ổn định rồi bắt đầu quét AI tự động mỗi 2.2 giây
       setTimeout(() => {
         updateAiStatus('detecting', `AI đang tự động quét góc 1/3: Nhìn thẳng chính diện...`);
         if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
@@ -247,14 +237,12 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
     }
   }, [resetEnrollment, updateAiStatus]);
 
-  // Gán stream vào video tag khi stream thay đổi
   useEffect(() => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
     }
   }, [stream]);
 
-  // Mở camera tự động khi mở modal ở mode camera (chỉ phụ thuộc vào isOpen và mode)
   useEffect(() => {
     if (isOpen) {
       if (mode === 'camera') {
@@ -269,7 +257,6 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
     }
   }, [isOpen, mode, startCamera, stopCamera]);
 
-  // Tải ảnh thủ công (Upload mode)
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -304,44 +291,44 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
   if (!isOpen || !staff) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-[fadeIn_0.2s_ease_both]">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[94vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
+      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[94vh]">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-3.5 border-b border-zinc-800/80 bg-zinc-950/60">
+        <div className="flex items-center justify-between px-6 py-3.5 border-b border-slate-200 bg-slate-50/70">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-violet-500/15 text-violet-400 rounded-xl border border-violet-500/20">
+            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 shadow-xs">
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-zinc-100 flex items-center gap-2">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 Đăng ký 3 góc khuôn mặt AI
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
                   Multi-Angle AI
                 </span>
               </h3>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Nhân viên: <span className="font-semibold text-zinc-200">{staff.fullName}</span> ({staff.staffCode})
+              <p className="text-xs text-slate-500 mt-0.5">
+                Nhân viên: <span className="font-semibold text-slate-800">{staff.fullName}</span> ({staff.staffCode})
               </p>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-zinc-800 rounded-xl text-zinc-400 hover:text-zinc-200 transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-700 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Selector */}
-        <div className="flex border-b border-zinc-800/80 bg-zinc-950/30 p-1.5 gap-2">
+        <div className="flex border-b border-slate-200 bg-slate-50/40 p-1.5 gap-2">
           <button
             type="button"
             onClick={() => { setMode('camera'); }}
-            className={`flex-1 py-2.5 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all ${
+            className={`flex-1 py-2.5 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
               mode === 'camera'
-                ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/25'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <Video className="w-4 h-4" /> Quét 3 góc tự động (AI Scan)
@@ -349,10 +336,10 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
           <button
             type="button"
             onClick={() => { stopCamera(); setMode('upload'); }}
-            className={`flex-1 py-2.5 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all ${
+            className={`flex-1 py-2.5 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
               mode === 'upload'
-                ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/25'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <ImageIcon className="w-4 h-4" /> Tải ảnh thủ công
@@ -365,7 +352,7 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
             <div className="flex flex-col items-center gap-3.5">
 
               {/* 3-Step Interactive Progress Bar */}
-              <div className="w-full bg-zinc-950/80 border border-zinc-800/90 rounded-2xl p-3 shadow-inner">
+              <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 shadow-inner">
                 <div className="flex items-center justify-between gap-1 mb-2">
                   {FACE_STEPS.map((step, idx) => {
                     const isDone = completedSteps[idx];
@@ -374,15 +361,15 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                       <div key={step.id} className="flex-1 flex flex-col items-center gap-1">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
                           isDone
-                            ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/30'
+                            ? 'bg-emerald-500 text-white shadow-sm'
                             : isCurrent
-                            ? 'bg-violet-600 text-white ring-4 ring-violet-500/30 animate-pulse scale-110 shadow-lg shadow-violet-600/40'
-                            : 'bg-zinc-800 text-zinc-500 border border-zinc-700/50'
+                            ? 'bg-indigo-600 text-white ring-4 ring-indigo-200 animate-pulse scale-105 shadow-sm'
+                            : 'bg-slate-200 text-slate-500'
                         }`}>
                           {isDone ? <Check className="w-4 h-4 stroke-[3]" /> : idx + 1}
                         </div>
                         <span className={`text-[10px] font-medium transition-colors ${
-                          isDone ? 'text-emerald-400 font-semibold' : isCurrent ? 'text-violet-300 font-bold' : 'text-zinc-500'
+                          isDone ? 'text-emerald-700 font-semibold' : isCurrent ? 'text-indigo-700 font-bold' : 'text-slate-400'
                         }`}>
                           {step.label}
                         </span>
@@ -392,9 +379,9 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                 </div>
 
                 {/* Progress bar line */}
-                <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-emerald-500 via-violet-500 to-indigo-500 transition-all duration-500"
+                    className="h-full bg-gradient-to-r from-emerald-500 via-indigo-600 to-indigo-500 transition-all duration-500"
                     style={{ 
                       width: `${aiStatus === 'all_success' ? 100 : (completedSteps.filter(Boolean).length / 3) * 100}%` 
                     }}
@@ -404,19 +391,19 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
 
               {/* Current Step Instruction Banner */}
               {aiStatus !== 'all_success' && (
-                <div className="w-full flex items-center justify-between px-3.5 py-2 bg-zinc-950/60 border border-zinc-800/80 rounded-xl">
+                <div className="w-full flex items-center justify-between px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl">
                   <div className="flex items-center gap-2">
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${activeStep.badgeStyle}`}>
                       {activeStep.badge}
                     </span>
-                    <span className="text-xs font-bold text-zinc-100">{activeStep.title}</span>
+                    <span className="text-xs font-bold text-slate-800">{activeStep.title}</span>
                   </div>
-                  <span className="text-[11px] text-zinc-400 italic">{activeStep.hint}</span>
+                  <span className="text-[11px] text-slate-500 italic">{activeStep.hint}</span>
                 </div>
               )}
               
               {/* Camera Scanner Viewport */}
-              <div className="relative w-full aspect-4/3 sm:aspect-video rounded-2xl overflow-hidden bg-black border-2 border-zinc-800 shadow-2xl flex items-center justify-center">
+              <div className="relative w-full aspect-4/3 sm:aspect-video rounded-2xl overflow-hidden bg-black border-2 border-slate-200 shadow-xl flex items-center justify-center">
                 
                 {/* Live Video */}
                 <video
@@ -435,17 +422,17 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                   type="button"
                   onClick={() => setIsMirrored(prev => !prev)}
                   title={isMirrored ? 'Đang bật lật ảnh gương (Selfie). Nhấn để tắt' : 'Đang tắt lật ảnh gương. Nhấn để bật'}
-                  className="absolute top-3 right-3 z-10 p-2 rounded-xl bg-black/60 hover:bg-black/80 text-zinc-300 hover:text-white border border-white/10 backdrop-blur-md transition-all cursor-pointer shadow-lg"
+                  className="absolute top-3 right-3 z-10 p-2 rounded-xl bg-black/60 hover:bg-black/80 text-white/80 hover:text-white border border-white/10 backdrop-blur-md transition-all cursor-pointer shadow-lg"
                 >
                   <FlipHorizontal className="w-4 h-4" />
                 </button>
 
-                {/* AI Target Biometric Oval Frame with Dynamic Directional Cue - Không dùng scale để tránh giật khung hình */}
+                {/* AI Target Biometric Oval Frame with Dynamic Directional Cue */}
                 {aiStatus !== 'all_success' && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className={`relative w-48 h-60 sm:w-56 sm:h-72 rounded-[45%] border-2 border-dashed transition-colors duration-300 ${
                       aiStatus === 'processing' || aiStatus === 'step_success'
-                        ? 'border-violet-400 shadow-[0_0_35px_rgba(139,92,246,0.6)]'
+                        ? 'border-indigo-400 shadow-[0_0_35px_rgba(99,102,241,0.6)]'
                         : activeStep.ringStyle
                     }`}>
                       
@@ -453,7 +440,7 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                       <div className={`absolute left-0 right-0 h-1 bg-gradient-to-r ${activeStep.laserStyle} animate-[scanLaser_2.0s_ease-in-out_infinite]`} />
                       
                       {/* Directional Cue Icon Overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center text-white/40">
+                      <div className="absolute inset-0 flex items-center justify-center text-white/50">
                         {activeStep.direction === 'left' && (
                           <div className="flex items-center gap-1 text-blue-400 animate-[bounceLeft_1s_infinite]">
                             <ArrowLeft className="w-12 h-12 stroke-[2.5]" />
@@ -467,7 +454,7 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                           </div>
                         )}
                         {activeStep.direction === 'center' && (
-                          <div className="flex flex-col items-center gap-1 text-emerald-400/80 animate-pulse">
+                          <div className="flex flex-col items-center gap-1 text-emerald-400 animate-pulse">
                             <Sparkles className="w-8 h-8" />
                             <span className="text-[10px] font-bold uppercase tracking-wider">Nhìn thẳng</span>
                           </div>
@@ -475,10 +462,10 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                       </div>
 
                       {/* Corner markers */}
-                      <div className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-violet-400 rounded-tl" />
-                      <div className="absolute -top-2 -right-2 w-4 h-4 border-t-2 border-r-2 border-violet-400 rounded-tr" />
-                      <div className="absolute -bottom-2 -left-2 w-4 h-4 border-b-2 border-l-2 border-violet-400 rounded-bl" />
-                      <div className="absolute -bottom-2 -right-2 w-4 h-4 border-b-2 border-r-2 border-violet-400 rounded-br" />
+                      <div className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-indigo-400 rounded-tl" />
+                      <div className="absolute -top-2 -right-2 w-4 h-4 border-t-2 border-r-2 border-indigo-400 rounded-tr" />
+                      <div className="absolute -bottom-2 -left-2 w-4 h-4 border-b-2 border-l-2 border-indigo-400 rounded-bl" />
+                      <div className="absolute -bottom-2 -right-2 w-4 h-4 border-b-2 border-r-2 border-indigo-400 rounded-br" />
                     </div>
                   </div>
                 )}
@@ -491,15 +478,15 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                     </div>
                     <h4 className="text-xl font-extrabold text-emerald-300">ĐÃ HOÀN TẤT 3 GÓC KHUÔN MẶT!</h4>
                     <p className="text-xs text-emerald-200/90 mt-1 max-w-xs">
-                      3 vector đặc trưng (Chính diện, Trái, Phải) đã được lưu thành công. Kiosk AI có thể nhận diện cực nhanh và chuẩn xác!
+                      3 vector đặc trưng (Chính diện, Trái, Phải) đã được lưu thành công.
                     </p>
                   </div>
                 )}
 
                 {/* Loading state before camera stream */}
                 {!stream && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 text-zinc-500">
-                    <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mb-3" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-slate-400">
+                    <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3" />
                     <p className="text-xs">Đang mở camera...</p>
                   </div>
                 )}
@@ -508,23 +495,23 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
               {/* Status Bar */}
               <div className={`w-full p-3.5 rounded-2xl border flex items-center gap-3 transition-all ${
                 aiStatus === 'all_success'
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                   : aiStatus === 'processing' || aiStatus === 'step_success'
-                  ? 'bg-violet-500/10 border-violet-500/30 text-violet-300'
+                  ? 'bg-indigo-50 border-indigo-200 text-indigo-800'
                   : aiStatus === 'error'
-                  ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
-                  : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-300'
+                  ? 'bg-amber-50 border-amber-200 text-amber-800'
+                  : 'bg-slate-50 border-slate-200 text-slate-700'
               }`}>
                 {aiStatus === 'processing' ? (
-                  <RefreshCw className="w-5 h-5 animate-spin text-violet-400 shrink-0" />
+                  <RefreshCw className="w-5 h-5 animate-spin text-indigo-600 shrink-0" />
                 ) : aiStatus === 'all_success' || aiStatus === 'step_success' ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                 ) : (
-                  <Sparkles className="w-5 h-5 text-violet-400 shrink-0 animate-pulse" />
+                  <Sparkles className="w-5 h-5 text-indigo-600 shrink-0 animate-pulse" />
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold">{statusMessage}</p>
-                  <p className="text-[11px] text-zinc-500 mt-0.5">
+                  <p className="text-[11px] text-slate-400 mt-0.5">
                     AI tự động quét mỗi 2.2s hoặc nhấn "Chụp góc này &amp; Lưu" khi đã chỉnh đúng vị trí.
                   </p>
                 </div>
@@ -537,7 +524,7 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                     type="button"
                     onClick={resetEnrollment}
                     title="Xoá làm lại từ Bước 1"
-                    className="px-3 py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-2xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shrink-0"
+                    className="px-3.5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-2xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shrink-0 cursor-pointer shadow-xs"
                   >
                     <RotateCcw className="w-4 h-4" /> Reset
                   </button>
@@ -546,7 +533,7 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                     type="button"
                     disabled={aiStatus === 'processing' || !stream}
                     onClick={() => runAiDetection()}
-                    className="flex-1 py-3 px-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 text-white rounded-2xl text-xs font-bold transition-all shadow-lg shadow-violet-600/25 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-2xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Camera className="w-4 h-4" />
                     {aiStatus === 'processing' 
@@ -562,7 +549,7 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
             <form onSubmit={handleManualUploadSubmit} className="space-y-4">
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-zinc-700/60 hover:border-violet-500/50 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-800/30 transition-all group"
+                className="border-2 border-dashed border-slate-200 hover:border-indigo-400 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-all group"
               >
                 <input
                   type="file"
@@ -572,14 +559,14 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                   onChange={handleFileChange}
                 />
                 {preview ? (
-                  <img src={preview} alt="Preview" className="max-h-56 rounded-xl object-cover shadow-lg border border-zinc-700" />
+                  <img src={preview} alt="Preview" className="max-h-56 rounded-xl object-cover shadow-md border border-slate-200" />
                 ) : (
                   <>
-                    <div className="p-4 bg-zinc-800/60 rounded-2xl group-hover:scale-110 group-hover:bg-violet-500/20 transition-all">
-                      <ImageIcon className="w-8 h-8 text-zinc-400 group-hover:text-violet-400" />
+                    <div className="p-4 bg-slate-100 rounded-2xl group-hover:scale-105 group-hover:bg-indigo-50 transition-all">
+                      <ImageIcon className="w-8 h-8 text-slate-400 group-hover:text-indigo-600" />
                     </div>
-                    <p className="mt-4 text-xs font-medium text-zinc-200">Nhấn để chọn ảnh khuôn mặt từ máy tính</p>
-                    <p className="text-[10px] text-zinc-500 mt-1">Hỗ trợ định dạng JPG, PNG chất lượng cao</p>
+                    <p className="mt-4 text-xs font-medium text-slate-700">Nhấn để chọn ảnh khuôn mặt từ máy tính</p>
+                    <p className="text-[10px] text-slate-400 mt-1">Hỗ trợ định dạng JPG, PNG chất lượng cao</p>
                   </>
                 )}
               </div>
@@ -588,14 +575,14 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="flex-1 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-semibold transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-xs"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={!file || aiStatus === 'processing'}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-violet-600/25"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
                 >
                   <UploadCloud className="w-4 h-4" /> Tải lên &amp; Lưu
                 </button>
@@ -605,14 +592,13 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
         </div>
 
         {/* Footer info */}
-        <div className="px-6 py-3 bg-zinc-950/80 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-500">
+        <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-400">
           <span>AI Model: SFace + YuNet Detector</span>
           <span>3-Vector Multi-Angle Match (Chính diện - Trái - Phải)</span>
         </div>
 
       </div>
 
-      {/* Inline styles for custom scan laser & directional animations */}
       <style>{`
         @keyframes scanLaser {
           0% { top: 10%; opacity: 0; }
@@ -627,14 +613,6 @@ export default function FaceModal({ isOpen, onClose, staff, onSuccess }) {
         @keyframes bounceRight {
           0%, 100% { transform: translateX(0); }
           50% { transform: translateX(8px); }
-        }
-        @keyframes bounceUp {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
-        }
-        @keyframes bounceDown {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(8px); }
         }
       `}</style>
     </div>

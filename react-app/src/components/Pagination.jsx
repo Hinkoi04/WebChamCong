@@ -39,11 +39,11 @@ export default function Pagination({
   };
 
   return (
-    <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-3.5 border-t border-zinc-800 bg-zinc-900/60 text-xs text-zinc-400 ${className}`}>
+    <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-3.5 border-t border-slate-200 bg-white text-xs text-slate-500 ${className}`}>
       {/* Left: Summary Info */}
       <div className="flex items-center gap-2 font-mono text-[11px]">
         <span>
-          Hiển thị <span className="font-bold text-zinc-200">{startItem}</span> - <span className="font-bold text-zinc-200">{endItem}</span> trên tổng số <span className="font-bold text-violet-400">{totalItems}</span> mục
+          Hiển thị <span className="font-bold text-slate-800">{startItem}</span> - <span className="font-bold text-slate-800">{endItem}</span> trên tổng số <span className="font-bold text-indigo-600">{totalItems}</span> mục
         </span>
       </div>
 
@@ -59,7 +59,7 @@ export default function Pagination({
                 onPageSizeChange(Number(e.target.value));
                 if (onPageChange) onPageChange(1);
               }}
-              className="bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 text-zinc-200 focus:outline-none focus:border-violet-500 font-mono cursor-pointer"
+              className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-700 focus:outline-none focus:border-indigo-500 font-mono cursor-pointer shadow-xs"
             >
               {pageSizeOptions.map((opt) => (
                 <option key={opt} value={opt}>
@@ -77,7 +77,7 @@ export default function Pagination({
             onClick={() => onPageChange(1)}
             disabled={validCurrentPage === 1}
             title="Trang đầu"
-            className="w-7 h-7 flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-xs"
           >
             <ChevronsLeft className="w-3.5 h-3.5" />
           </button>
@@ -87,7 +87,7 @@ export default function Pagination({
             onClick={() => onPageChange(validCurrentPage - 1)}
             disabled={validCurrentPage === 1}
             title="Trang trước"
-            className="w-7 h-7 flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-xs"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
@@ -96,7 +96,7 @@ export default function Pagination({
           {getPageNumbers().map((p, idx) => {
             if (p === '...') {
               return (
-                <span key={`dots-${idx}`} className="px-1 text-zinc-600 font-mono text-[11px]">
+                <span key={`dots-${idx}`} className="px-1 text-slate-400 font-mono text-[11px]">
                   ...
                 </span>
               );
@@ -105,10 +105,10 @@ export default function Pagination({
               <button
                 key={p}
                 onClick={() => onPageChange(p)}
-                className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
+                className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer shadow-xs ${
                   validCurrentPage === p
-                    ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30 border border-violet-500/50'
-                    : 'border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+                    ? 'bg-indigo-600 text-white shadow-sm border border-indigo-600'
+                    : 'border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }`}
               >
                 {p}
@@ -121,7 +121,7 @@ export default function Pagination({
             onClick={() => onPageChange(validCurrentPage + 1)}
             disabled={validCurrentPage === totalPages || totalPages === 0}
             title="Trang sau"
-            className="w-7 h-7 flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-xs"
           >
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
@@ -131,7 +131,7 @@ export default function Pagination({
             onClick={() => onPageChange(totalPages)}
             disabled={validCurrentPage === totalPages || totalPages === 0}
             title="Trang cuối"
-            className="w-7 h-7 flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-xs"
           >
             <ChevronsRight className="w-3.5 h-3.5" />
           </button>

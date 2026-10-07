@@ -57,15 +57,15 @@ export default function AdminOrgsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold text-zinc-100">Quản lý tổ chức (Dữ liệu thật)</h2>
-          <p className="text-xs text-zinc-500 mt-1 font-mono">
+          <h2 className="text-lg font-bold text-slate-800">Quản lý tổ chức (Dữ liệu thật)</h2>
+          <p className="text-xs text-slate-500 mt-1 font-mono">
             {orgs.length} tổ chức đăng ký · {orgs.filter((o) => o.status === 'PENDING').length} chờ duyệt ·{' '}
             {orgs.filter((o) => o.status === 'LOCKED').length} bị khóa
           </p>
         </div>
         <button
           onClick={() => showToast('Tính năng tạo tổ chức trực tiếp đang được phát triển', 'info')}
-          className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-violet-600/15 w-max"
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs w-max cursor-pointer"
         >
           <UserPlus className="w-4 h-4" />
           Tạo tổ chức mới
@@ -75,19 +75,19 @@ export default function AdminOrgsPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Tài khoản PRO', value: counts.pro, c: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/15' },
-          { label: 'Tài khoản BASIC', value: counts.basic, c: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/15' },
-          { label: 'Tài khoản FREE', value: counts.free, c: 'text-zinc-400', bg: 'bg-zinc-800/20 border-zinc-800' }
+          { label: 'Tài khoản PRO', value: counts.pro, c: 'text-indigo-600', bg: 'bg-indigo-50/60 border-indigo-100' },
+          { label: 'Tài khoản BASIC', value: counts.basic, c: 'text-blue-600', bg: 'bg-blue-50/60 border-blue-100' },
+          { label: 'Tài khoản FREE', value: counts.free, c: 'text-slate-600', bg: 'bg-slate-50 border-slate-200' }
         ].map((x) => (
-          <div key={x.label} className={`rounded-2xl border p-4 flex items-center justify-between shadow-md ${x.bg}`}>
-            <span className="text-xs font-semibold text-zinc-400">{x.label}</span>
+          <div key={x.label} className={`rounded-2xl border p-4 flex items-center justify-between shadow-xs ${x.bg}`}>
+            <span className="text-xs font-semibold text-slate-500">{x.label}</span>
             <span className={`text-2xl font-bold font-mono ${x.c}`}>{x.value}</span>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="flex gap-1.5 bg-zinc-900/40 border border-zinc-800/40 rounded-xl p-1 w-max max-w-full overflow-x-auto">
+      <div className="flex gap-1.5 bg-slate-100 border border-slate-200/80 rounded-xl p-1 w-max max-w-full overflow-x-auto">
         {['Tất cả', 'ACTIVE', 'PENDING', 'LOCKED'].map((tab) => (
           <button
             key={tab}
@@ -95,8 +95,8 @@ export default function AdminOrgsPage() {
               setFilter(tab);
               setCurrentPage(1);
             }}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-              filter === tab ? 'bg-zinc-800 text-zinc-100 shadow-md border border-zinc-700/30' : 'text-zinc-400 hover:text-zinc-200'
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              filter === tab ? 'bg-white text-slate-800 shadow-xs border border-slate-200/60' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             {tab === 'ACTIVE' ? 'Hoạt động' : tab === 'PENDING' ? 'Chờ duyệt' : tab === 'LOCKED' ? 'Bị khóa' : 'Tất cả'}
@@ -105,41 +105,41 @@ export default function AdminOrgsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-md">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-8 text-center text-sm text-zinc-500 font-medium">Đang tải danh sách tổ chức...</div>
+            <div className="p-8 text-center text-sm text-slate-400 font-medium">Đang tải danh sách tổ chức...</div>
           ) : (
-            <table className="w-full text-sm text-zinc-300">
+            <table className="w-full text-sm text-slate-700">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-800/10">
+                <tr className="border-b border-slate-200 bg-slate-50/75">
                   {['Tổ chức', 'Email', 'Gói', 'Trạng thái', 'Ngày tạo', 'Hành động'].map((h) => (
-                    <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 whitespace-nowrap">
+                    <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/40">
+              <tbody className="divide-y divide-slate-100">
                 {paginatedOrgs.map((o) => (
-                  <tr key={o.id} className="hover:bg-zinc-800/10 transition-colors">
+                  <tr key={o.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-violet-600/15 flex items-center justify-center border border-violet-500/10">
-                          <Building2 className="w-5 h-5 text-violet-400" />
+                        <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100">
+                          <Building2 className="w-5 h-5 text-indigo-600" />
                         </div>
-                        <span className="text-sm font-semibold text-zinc-200">{o.orgName}</span>
+                        <span className="text-sm font-semibold text-slate-800">{o.orgName}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-xs font-mono text-zinc-400">{o.email}</td>
+                    <td className="px-5 py-4 text-xs font-mono text-slate-500">{o.email}</td>
                     <td className="px-5 py-4">
                       <span
-                        className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-bold border ${
+                        className={`px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold border ${
                           o.plan === 'PRO'
-                            ? 'bg-violet-500/10 text-violet-400 border-violet-500/15'
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
                             : o.plan === 'BASIC'
-                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/15'
-                            : 'bg-zinc-800 text-zinc-500 border-zinc-800'
+                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            : 'bg-slate-100 text-slate-600 border-slate-200'
                         }`}
                       >
                         {o.plan}
@@ -147,22 +147,22 @@ export default function AdminOrgsPage() {
                     </td>
                     <td className="px-5 py-4">
                       {o.status === 'ACTIVE' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-400/10 text-emerald-400 border border-emerald-500/15">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                           Hoạt động
                         </span>
                       )}
                       {o.status === 'PENDING' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400/10 text-amber-400 border border-amber-500/15">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                           Chờ duyệt
                         </span>
                       )}
                       {o.status === 'LOCKED' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-400/10 text-red-400 border border-red-500/15">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
                           Bị khóa
                         </span>
                       )}
                     </td>
-                    <td className="px-5 py-4 text-xs font-mono text-zinc-500">
+                    <td className="px-5 py-4 text-xs font-mono text-slate-500">
                       {o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN') : '—'}
                     </td>
                     <td className="px-5 py-4">
@@ -170,7 +170,7 @@ export default function AdminOrgsPage() {
                         {o.status === 'PENDING' && (
                           <button
                             onClick={() => handleStatusChange(o.id, 'ACTIVE', o.orgName)}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-400/10 text-emerald-400 rounded-lg text-xs hover:bg-emerald-400/20 transition-all font-semibold border border-emerald-500/15 active:scale-95 cursor-pointer"
+                            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs hover:bg-emerald-100 transition-all font-semibold border border-emerald-200 active:scale-95 cursor-pointer"
                           >
                             <Check className="w-3.5 h-3.5" />
                             Duyệt
@@ -179,7 +179,7 @@ export default function AdminOrgsPage() {
                         {o.status === 'ACTIVE' && (
                           <button
                             onClick={() => handleStatusChange(o.id, 'LOCKED', o.orgName)}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-red-400/10 text-red-400 rounded-lg text-xs hover:bg-red-400/20 transition-all font-semibold border border-red-500/15 active:scale-95 cursor-pointer"
+                            className="flex items-center gap-1 px-3 py-1.5 bg-rose-50 text-rose-700 rounded-lg text-xs hover:bg-rose-100 transition-all font-semibold border border-rose-200 active:scale-95 cursor-pointer"
                           >
                             <Lock className="w-3.5 h-3.5" />
                             Khóa
@@ -188,13 +188,13 @@ export default function AdminOrgsPage() {
                         {o.status === 'LOCKED' && (
                           <button
                             onClick={() => handleStatusChange(o.id, 'ACTIVE', o.orgName)}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-400/10 text-emerald-400 rounded-lg text-xs hover:bg-emerald-400/20 transition-all font-semibold border border-emerald-500/15 active:scale-95 cursor-pointer"
+                            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs hover:bg-emerald-100 transition-all font-semibold border border-emerald-200 active:scale-95 cursor-pointer"
                           >
                             <Unlock className="w-3.5 h-3.5" />
                             Mở khóa
                           </button>
                         )}
-                        <button className="flex items-center gap-1 px-3 py-1.5 border border-zinc-800 text-zinc-400 rounded-lg text-xs hover:text-zinc-100 hover:border-zinc-700 transition-all active:scale-95 cursor-pointer">
+                        <button className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg text-xs transition-all active:scale-95 cursor-pointer">
                           <Eye className="w-3.5 h-3.5" />
                           Chi tiết
                         </button>
@@ -204,7 +204,7 @@ export default function AdminOrgsPage() {
                 ))}
                 {shown.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="p-8 text-center text-sm text-zinc-500 font-medium">Không tìm thấy tổ chức nào.</td>
+                    <td colSpan="6" className="p-8 text-center text-sm text-slate-400 font-medium">Không tìm thấy tổ chức nào.</td>
                   </tr>
                 )}
               </tbody>

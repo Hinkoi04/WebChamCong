@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { Bell, CheckCircle2, XCircle } from 'lucide-react';
 
-
 const ToastContext = createContext(null);
 
 export function useToast() {
@@ -27,15 +26,15 @@ export function ToastProvider({ children }) {
   };
 
   const icons = {
-    success: <CheckCircle2 className="w-4 h-4 text-emerald-400" />,
-    error: <XCircle className="w-4 h-4 text-red-400" />,
-    info: <Bell className="w-4 h-4 text-blue-400" />
+    success: <CheckCircle2 className="w-4 h-4 text-emerald-600" />,
+    error: <XCircle className="w-4 h-4 text-rose-600" />,
+    info: <Bell className="w-4 h-4 text-indigo-600" />
   };
 
   const bars = {
-    success: 'bg-emerald-400',
-    error: 'bg-red-400',
-    info: 'bg-blue-400'
+    success: 'bg-emerald-500',
+    error: 'bg-rose-500',
+    info: 'bg-indigo-500'
   };
 
   return (
@@ -47,11 +46,11 @@ export function ToastProvider({ children }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 flex items-center gap-2.5 shadow-2xl min-w-[260px] pointer-events-auto animate-[fadeInUp_0.25s_ease_both]"
+            className="bg-white border border-slate-200/90 rounded-xl px-4 py-3 flex items-center gap-3 shadow-xl min-w-[280px] pointer-events-auto animate-[fadeInUp_0.25s_ease_both]"
           >
-            <div className={`w-0.5 h-8 rounded-full ${bars[t.type]} flex-shrink-0`} />
+            <div className={`w-1 h-7 rounded-full ${bars[t.type]} flex-shrink-0`} />
             {icons[t.type]}
-            <span className="text-sm text-zinc-100">{t.msg}</span>
+            <span className="text-xs sm:text-sm font-medium text-slate-800">{t.msg}</span>
           </div>
         ))}
       </div>
@@ -59,14 +58,14 @@ export function ToastProvider({ children }) {
       {/* Confirmation Dialog */}
       {confirm && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={hideConfirm} />
-          <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-5 sm:p-6 w-full max-w-sm shadow-2xl animate-[fadeInScale_0.2s_ease_both]">
-            <h3 className="text-sm font-semibold text-zinc-100">{confirm.title}</h3>
-            <p className="text-xs text-zinc-400 mt-2 leading-relaxed">{confirm.desc}</p>
-            <div className="flex gap-2 mt-5">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={hideConfirm} />
+          <div className="relative bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-[fadeInScale_0.2s_ease_both]">
+            <h3 className="text-sm font-bold text-slate-900">{confirm.title}</h3>
+            <p className="text-xs text-slate-500 mt-2 leading-relaxed">{confirm.desc}</p>
+            <div className="flex gap-2.5 mt-5">
               <button
                 onClick={hideConfirm}
-                className="flex-1 px-4 py-2 border border-zinc-800 rounded-lg text-xs text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors"
+                className="flex-1 px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 Hủy
               </button>
@@ -75,7 +74,7 @@ export function ToastProvider({ children }) {
                   confirm.onConfirm();
                   hideConfirm();
                 }}
-                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition-colors"
+                className="flex-1 px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-semibold hover:bg-rose-700 transition-colors shadow-sm cursor-pointer"
               >
                 Xác nhận
               </button>

@@ -12,7 +12,6 @@ import {
   AlertTriangle, Scan, Edit, Camera, Eye
 } from 'lucide-react';
 
-
 export default function OrgStaffPage() {
   const { showToast, showConfirm } = useToast();
   const [staffs, setStaffs] = useState([]);
@@ -33,7 +32,6 @@ export default function OrgStaffPage() {
   const [selectedFaceStaff, setSelectedFaceStaff] = useState(null);
   const [selectedDetailStaff, setSelectedDetailStaff] = useState(null);
 
-
   const [form, setForm] = useState({
     staffCode: '',
     fullName: '',
@@ -47,7 +45,6 @@ export default function OrgStaffPage() {
 
   const orgId = localStorage.getItem('orgId');
 
-
   const loadData = useCallback(async () => {
     if (!orgId) return;
     setLoading(true);
@@ -56,7 +53,6 @@ export default function OrgStaffPage() {
       setStaffs(staffList);
       
       await positionService.getPositionList(orgId); // giữ lại để validate
-
       const deptList = await departmentService.getDepartmentList(orgId);
       setDepartments(deptList);
     } catch {
@@ -65,7 +61,6 @@ export default function OrgStaffPage() {
       setLoading(false);
     }
   }, [orgId, showToast]);
-
 
   useEffect(() => {
     loadData();
@@ -170,11 +165,11 @@ export default function OrgStaffPage() {
   const handleDeleteStaff = (id, name) => {
     showConfirm(
       'Xóa nhân viên',
-      `Bạn có chắc chắn muốn xóa nhân viên ${name} (${id})? Thao tác này không thể khôi phục lại.`,
+      `Bạn có chắc chắn muốn xóa nhân viên ${name} (${id})? Thao tác này sẽ chuyển nhân viên vào thùng rác.`,
       async () => {
         try {
           await staffService.deleteStaff(orgId, id);
-          showToast(`Đã xóa thành công nhân viên ${name}`, 'error');
+          showToast(`Đã chuyển nhân viên ${name} vào thùng rác`, 'info');
           loadData();
         } catch (err) {
           showToast('Không thể xóa nhân viên này', 'error');
@@ -232,29 +227,28 @@ export default function OrgStaffPage() {
         onAddFace={(s) => handleAddFace(s)}
       />
 
-
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold text-zinc-100">Danh sách nhân viên</h2>
-          <p className="text-xs text-zinc-500 mt-1 font-mono">
+          <h2 className="text-lg font-bold text-slate-900">Danh sách nhân viên</h2>
+          <p className="text-xs text-slate-500 mt-1 font-mono">
             {staffs.length} nhân viên · {staffs.filter((s) => !s.faceRegistered).length} chưa đăng ký khuôn mặt ·{' '}
             {staffs.filter((s) => s.status === 'LOCKED').length} bị khóa
           </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm kiếm..."
-              className="bg-zinc-900/60 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-violet-500/50 w-52 sm:w-60 transition-all"
+              className="bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 w-52 sm:w-60 transition-all shadow-xs"
             />
           </div>
 
           <button
             onClick={handleOpenAdd}
-            className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-violet-600/15 cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition-all shadow-sm cursor-pointer"
           >
             <UserPlus className="w-4 h-4" /> Thêm nhân viên
           </button>
@@ -262,13 +256,13 @@ export default function OrgStaffPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1.5 bg-zinc-900/40 border border-zinc-800/40 rounded-xl p-1 w-max max-w-full overflow-x-auto">
+      <div className="flex gap-1.5 bg-slate-100 border border-slate-200/80 rounded-xl p-1 w-max max-w-full overflow-x-auto shadow-xs">
         {DEPTS.map((item) => (
           <button
             key={item}
             onClick={() => setDept(item)}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-              dept === item ? 'bg-zinc-800 text-zinc-100 shadow-md border border-zinc-700/30' : 'text-zinc-400 hover:text-zinc-200'
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              dept === item ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             {item}
@@ -277,55 +271,55 @@ export default function OrgStaffPage() {
       </div>
 
       {/* Table Card */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-md">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-8 text-center text-sm text-zinc-500 font-medium">Đang tải danh sách nhân sự...</div>
+            <div className="p-8 text-center text-sm text-slate-400 font-medium">Đang tải danh sách nhân sự...</div>
           ) : (
-            <table className="w-full text-sm text-zinc-300">
+            <table className="w-full text-sm text-slate-700">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-800/10">
+                <tr className="border-b border-slate-200 bg-slate-50/70 text-slate-500">
                   {['Mã NV', 'Họ tên', 'Phòng ban', 'Chức vụ', 'Trạng thái', 'Khuôn mặt', 'Thao tác'].map((h) => (
-                    <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                    <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/40">
+              <tbody className="divide-y divide-slate-100">
                 {paginatedStaffs.map((s) => (
-                  <tr key={s.id} className="hover:bg-zinc-800/10 transition-colors">
-                    <td className="px-5 py-4 text-xs font-mono text-zinc-500">{s.staffCode}</td>
+                  <tr key={s.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="px-5 py-4 text-xs font-mono text-slate-500 font-medium">{s.staffCode}</td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-violet-600/15 flex items-center justify-center text-violet-400 font-mono text-xs font-semibold">
+                        <div className="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 font-mono text-xs font-semibold shadow-xs">
                           {(s.fullName[0] + (s.fullName.trim().split(' ').pop()[0] || '')).toUpperCase()}
                         </div>
                         <div>
-                          <div className="text-sm font-semibold text-zinc-200">{s.fullName}</div>
-                          <div className="text-[10px] text-zinc-500 font-mono mt-0.5">{s.email || 'Không có email'}</div>
+                          <div className="text-sm font-semibold text-slate-800">{s.fullName}</div>
+                          <div className="text-[10px] text-slate-400 font-mono mt-0.5">{s.email || 'Không có email'}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-xs text-zinc-400 font-medium">{s.department}</td>
-                    <td className="px-5 py-4 text-xs text-zinc-300 font-medium">{s.position || 'Chưa thiết lập'}</td>
+                    <td className="px-5 py-4 text-xs text-slate-600 font-medium">{s.department}</td>
+                    <td className="px-5 py-4 text-xs text-slate-700 font-medium">{s.position || 'Chưa thiết lập'}</td>
                     <td className="px-5 py-4">
                       <button
                         onClick={() => handleToggleLock(s.id, s.fullName, s.status)}
                         className="cursor-pointer transition-transform duration-100 active:scale-95 text-left"
                       >
                         {s.status === 'ACTIVE' && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-400/10 text-emerald-400 border border-emerald-500/15">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                             Hoạt động
                           </span>
                         )}
                         {s.status === 'LOCKED' && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-400/10 text-red-400 border border-red-500/15">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
                             Bị khóa
                           </span>
                         )}
                         {s.status === 'RESIGNED' && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-800 text-zinc-500 border border-zinc-800">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
                             Thôi việc
                           </span>
                         )}
@@ -333,12 +327,12 @@ export default function OrgStaffPage() {
                     </td>
                     <td className="px-5 py-4">
                       {s.faceRegistered ? (
-                        <span className="flex items-center gap-1 text-xs text-violet-400 font-semibold">
+                        <span className="flex items-center gap-1 text-xs text-indigo-600 font-semibold">
                           <Scan className="w-3.5 h-3.5" />
                           Đã đăng ký
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1 text-xs text-amber-400 font-semibold">
+                        <span className="flex items-center gap-1 text-xs text-amber-600 font-semibold">
                           <AlertTriangle className="w-3.5 h-3.5" />
                           Chưa có face
                         </span>
@@ -349,24 +343,24 @@ export default function OrgStaffPage() {
                         <button
                           onClick={() => handleOpenDetail(s)}
                           title="Xem chi tiết hồ sơ"
-                          className="p-1.5 rounded-lg bg-zinc-800/80 text-zinc-400 hover:text-violet-400 hover:bg-violet-400/10 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleOpenEdit(s)}
                           title="Sửa hồ sơ"
-                          className="p-1.5 rounded-lg bg-zinc-800/80 text-zinc-400 hover:text-blue-400 hover:bg-blue-400/10 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleToggleLock(s.id, s.fullName, s.status)}
                           title={s.status === 'LOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
-                          className={`p-1.5 rounded-lg bg-zinc-800/80 transition-colors cursor-pointer ${
+                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             s.status === 'LOCKED' 
-                              ? 'text-emerald-400 hover:bg-emerald-400/10' 
-                              : 'text-amber-400 hover:bg-amber-400/10'
+                              ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' 
+                              : 'bg-slate-100 text-slate-500 hover:text-amber-600 hover:bg-amber-50'
                           }`}
                         >
                           {s.status === 'LOCKED' ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
@@ -374,14 +368,14 @@ export default function OrgStaffPage() {
                         <button
                           onClick={() => handleAddFace(s)}
                           title="Thêm/Cập nhật khuôn mặt"
-                          className="p-1.5 rounded-lg bg-zinc-800/80 text-zinc-400 hover:text-violet-400 hover:bg-violet-400/10 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
                         >
                           <Camera className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteStaff(s.id, s.fullName)}
                           title="Xóa nhân viên (chuyển vào Thùng rác)"
-                          className="p-1.5 rounded-lg bg-zinc-800/80 text-zinc-400 hover:text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -393,7 +387,7 @@ export default function OrgStaffPage() {
             </table>
           )}
           {!loading && filtered.length === 0 && (
-            <div className="py-12 text-center text-sm text-zinc-500 font-medium">Không tìm thấy nhân viên nào phù hợp.</div>
+            <div className="py-12 text-center text-sm text-slate-400 font-medium">Không tìm thấy nhân viên nào phù hợp.</div>
           )}
         </div>
 
@@ -408,8 +402,6 @@ export default function OrgStaffPage() {
           />
         )}
       </div>
-
-
     </div>
   );
 }

@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Clock, DollarSign, Settings,
   Bell, Search, CheckCircle2, Building2, LogOut, Shield,
   ChevronDown, Scan, AlertTriangle, CalendarDays, Fingerprint, CalendarCheck,
-  Trash2, Menu, X, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen
+  Trash2, Menu, X, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 
 const orgNav = [
@@ -63,9 +63,9 @@ export default function DashboardLayout() {
   const [read, setRead] = useState(new Set());
   const unread = notifItems.filter((n) => !read.has(n.id)).length;
   const notifIcons = {
-    warning: <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />,
-    info: <Bell className="w-3.5 h-3.5 text-blue-400" />,
-    success: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+    warning: <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />,
+    info: <Bell className="w-3.5 h-3.5 text-blue-500" />,
+    success: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
   };
 
   const orgInfo = userRole === 'USER' ? JSON.parse(localStorage.getItem('orgInfo') || '{}') : {};
@@ -131,11 +131,11 @@ export default function DashboardLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-zinc-950 text-zinc-100 overflow-hidden antialiased font-sans">
+    <div className="flex h-screen bg-slate-50 text-slate-800 overflow-hidden antialiased font-sans">
       {/* Mobile Backdrop Overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden transition-opacity duration-300 animate-[fadeIn_0.2s_ease_both]"
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden transition-opacity duration-300 animate-[fadeIn_0.2s_ease_both]"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
@@ -143,26 +143,26 @@ export default function DashboardLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col h-full border-r border-zinc-800 bg-zinc-900/95 lg:bg-zinc-900/60 backdrop-blur-xl transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none lg:static ${
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col h-full border-r border-slate-200 bg-white transition-all duration-300 ease-in-out shadow-lg lg:shadow-none lg:static ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         } ${isCollapsed ? 'lg:w-[72px] w-64' : 'w-64'}`}
       >
         {/* Sidebar Header / Brand */}
-        <div className={`py-4 border-b border-zinc-800 flex items-center justify-between transition-all duration-300 ${
+        <div className={`py-4 border-b border-slate-200 flex items-center justify-between transition-all duration-300 ${
           isCollapsed ? 'lg:px-3 px-5' : 'px-5'
         }`}>
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-9 h-9 rounded-xl bg-violet-600/20 flex items-center justify-center border border-violet-500/25 flex-shrink-0 shadow-lg shadow-violet-600/10">
-              <Scan className="w-5 h-5 text-violet-400" />
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0 shadow-xs">
+              <Scan className="w-5 h-5 text-indigo-600" />
             </div>
             <div className={`transition-all duration-200 min-w-0 ${isCollapsed ? 'lg:hidden' : 'block'}`}>
-              <div className="text-sm font-bold text-zinc-100 tracking-tight flex items-center gap-1.5 truncate">
+              <div className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-1.5 truncate">
                 FaceTrack
-                <span className="text-[10px] px-1.5 py-0.2 bg-violet-500/10 text-violet-400 rounded-md border border-violet-500/20 font-mono">
+                <span className="text-[10px] px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-200/80 font-mono font-medium">
                   v2.4
                 </span>
               </div>
-              <div className="text-[10px] text-zinc-500 font-mono truncate">AI Chấm công & Quản lý</div>
+              <div className="text-[10px] text-slate-400 font-medium truncate">AI Chấm công & Quản lý</div>
             </div>
           </div>
 
@@ -172,7 +172,7 @@ export default function DashboardLayout() {
             <button
               onClick={toggleCollapse}
               title={isCollapsed ? 'Mở rộng thanh bên (Ctrl+B)' : 'Thu gọn thanh bên (Ctrl+B)'}
-              className={`hidden lg:flex items-center justify-center p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors cursor-pointer ${
+              className={`hidden lg:flex items-center justify-center p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer ${
                 isCollapsed ? 'mx-auto' : ''
               }`}
             >
@@ -182,7 +182,7 @@ export default function DashboardLayout() {
             {/* Mobile close button */}
             <button
               onClick={() => setMobileOpen(false)}
-              className="lg:hidden p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors cursor-pointer"
+              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
               aria-label="Đóng menu"
             >
               <X className="w-5 h-5" />
@@ -192,19 +192,19 @@ export default function DashboardLayout() {
 
         {/* Org/Unit Info Banner */}
         {role === 'org' && (
-          <div className={`py-3 border-b border-zinc-800 transition-all duration-300 ${
+          <div className={`py-3 border-b border-slate-200 bg-slate-50/50 transition-all duration-300 ${
             isCollapsed ? 'lg:px-2 lg:py-2 px-5' : 'px-5'
           }`}>
             <div className={`flex items-center justify-between ${isCollapsed ? 'lg:justify-center' : ''}`}>
               <div className={`min-w-0 ${isCollapsed ? 'lg:hidden' : 'block'}`}>
-                <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">Đơn vị</div>
-                <div className="text-xs font-bold text-zinc-200 mt-0.5 truncate max-w-[150px]">
+                <div className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Đơn vị</div>
+                <div className="text-xs font-bold text-slate-800 mt-0.5 truncate max-w-[150px]">
                   {orgInfo.orgName || 'ABC Tech'}
                 </div>
               </div>
               <span
                 title={isCollapsed ? `Đơn vị: ${orgInfo.orgName || 'ABC Tech'} (PRO)` : undefined}
-                className="px-2 py-0.5 bg-violet-500/10 text-violet-400 text-[10px] font-mono font-bold rounded-md border border-violet-500/20 uppercase shadow-sm"
+                className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-mono font-bold rounded-md border border-indigo-200/80 uppercase shadow-xs"
               >
                 {orgInfo.plan || 'PRO'}
               </span>
@@ -228,13 +228,13 @@ export default function DashboardLayout() {
                   isCollapsed ? 'lg:justify-center lg:px-2 py-2.5 px-3.5 gap-3' : 'px-3.5 py-2.5 gap-3'
                 } ${
                   isActive
-                    ? 'bg-violet-600/15 text-violet-300 font-semibold border border-violet-500/25 shadow-sm shadow-violet-600/10'
-                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40 border border-transparent'
+                    ? 'bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200/70 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent'
                 }`}
               >
                 <Icon
                   className={`w-4.5 h-4.5 flex-shrink-0 transition-transform duration-200 ${
-                    isActive ? 'text-violet-400 scale-105' : 'group-hover:text-zinc-200 group-hover:scale-105'
+                    isActive ? 'text-indigo-600 scale-105' : 'text-slate-400 group-hover:text-slate-600 group-hover:scale-105'
                   }`}
                 />
                 <span className={`truncate text-xs sm:text-sm ${isCollapsed ? 'lg:hidden' : 'block flex-1'}`}>
@@ -244,7 +244,7 @@ export default function DashboardLayout() {
                 {/* Active Indicator Bar */}
                 {isActive && (
                   <div
-                    className={`rounded-full bg-violet-500 ${
+                    className={`rounded-full bg-indigo-600 ${
                       isCollapsed ? 'lg:hidden w-1.5 h-4' : 'w-1.5 h-4 ml-auto'
                     }`}
                   />
@@ -252,7 +252,7 @@ export default function DashboardLayout() {
 
                 {/* Floating tooltip on collapsed desktop hover */}
                 {isCollapsed && (
-                  <div className="hidden lg:group-hover:block absolute left-full ml-3 px-2.5 py-1 bg-zinc-900 border border-zinc-700 text-zinc-100 text-xs rounded-lg whitespace-nowrap shadow-xl z-50 pointer-events-none animate-[fadeIn_0.15s_ease_both]">
+                  <div className="hidden lg:group-hover:block absolute left-full ml-3 px-2.5 py-1 bg-slate-900 border border-slate-800 text-white text-xs rounded-lg whitespace-nowrap shadow-xl z-50 pointer-events-none animate-[fadeIn_0.15s_ease_both]">
                     {label}
                   </div>
                 )}
@@ -262,21 +262,21 @@ export default function DashboardLayout() {
         </nav>
 
         {/* User Profile Footer */}
-        <div className={`p-3 border-t border-zinc-800 bg-zinc-900/40 transition-all duration-300 ${
+        <div className={`p-3 border-t border-slate-200 bg-slate-50/60 transition-all duration-300 ${
           isCollapsed ? 'lg:p-2' : 'p-3'
         }`}>
           {isCollapsed ? (
             <div className="hidden lg:flex flex-col items-center gap-2">
               <div
                 title={`${role === 'admin' ? (adminInfo.fullName || 'Super Admin') : 'Quản trị viên'} (${role === 'admin' ? (adminInfo.username || 'admin') : (orgInfo.email || 'admin@abctech.vn')})`}
-                className="w-9 h-9 rounded-xl bg-violet-600/15 border border-violet-500/20 flex items-center justify-center text-violet-400 font-mono text-xs font-bold cursor-pointer"
+                className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono text-xs font-bold flex items-center justify-center cursor-pointer shadow-xs"
               >
                 {role === 'admin' ? 'SA' : 'QT'}
               </div>
               <button
                 onClick={handleLogout}
                 title="Đăng xuất"
-                className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
+                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -284,21 +284,21 @@ export default function DashboardLayout() {
           ) : null}
 
           <div className={`flex items-center gap-3 ${isCollapsed ? 'lg:hidden' : 'flex'}`}>
-            <div className="w-8 h-8 rounded-full bg-violet-600/15 border border-violet-500/20 flex items-center justify-center text-violet-400 font-mono text-xs font-semibold flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono text-xs font-semibold flex items-center justify-center flex-shrink-0 shadow-xs">
               {role === 'admin' ? 'SA' : 'QT'}
             </div>
             <div className="flex-1 min-w-0 text-left">
-              <div className="text-xs font-semibold text-zinc-200 truncate">
+              <div className="text-xs font-semibold text-slate-800 truncate">
                 {role === 'admin' ? (adminInfo.fullName || 'Super Admin') : 'Quản trị viên'}
               </div>
-              <div className="text-[10px] text-zinc-500 truncate font-mono">
+              <div className="text-[10px] text-slate-400 truncate font-mono">
                 {role === 'admin' ? (adminInfo.username || 'admin') : (orgInfo.email || 'admin@abctech.vn')}
               </div>
             </div>
             <button
               onClick={handleLogout}
               title="Đăng xuất"
-              className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors p-1.5 rounded-lg cursor-pointer flex-shrink-0"
+              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors p-1.5 rounded-lg cursor-pointer flex-shrink-0"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -309,11 +309,11 @@ export default function DashboardLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top Header */}
-        <header className="h-16 border-b border-zinc-800 flex items-center px-4 sm:px-6 gap-3 sm:gap-4 flex-shrink-0 bg-zinc-900/40 backdrop-blur-md z-30">
+        <header className="h-16 border-b border-slate-200 flex items-center px-4 sm:px-6 gap-3 sm:gap-4 flex-shrink-0 bg-white/95 backdrop-blur-md z-30">
           {/* Mobile hamburger menu toggle */}
           <button
             onClick={() => setMobileOpen(true)}
-            className="lg:hidden p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer flex-shrink-0"
+            className="lg:hidden p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer flex-shrink-0"
             aria-label="Mở menu"
           >
             <Menu className="w-4.5 h-4.5" />
@@ -321,10 +321,10 @@ export default function DashboardLayout() {
 
           {/* Page Title & Subtitle */}
           <div className="flex-1 min-w-0">
-            <h1 className="text-sm sm:text-base font-bold text-zinc-100 truncate">
+            <h1 className="text-sm sm:text-base font-bold text-slate-900 truncate">
               {pageTitles[activeTab] ?? activeTab}
             </h1>
-            <p className="hidden sm:block text-[11px] text-zinc-500 font-mono mt-0.5 truncate">
+            <p className="hidden sm:block text-[11px] text-slate-400 font-mono mt-0.5 truncate">
               {new Date().toLocaleDateString('vi-VN', {
                 weekday: 'long',
                 year: 'numeric',
@@ -336,10 +336,10 @@ export default function DashboardLayout() {
 
           {/* Search bar on larger screens */}
           <div className="relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
             <input
               placeholder="Tìm kiếm..."
-              className="bg-zinc-900/60 border border-zinc-800 rounded-xl pl-9 pr-4 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-violet-500/50 w-44 lg:w-56 transition-all"
+              className="bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 w-44 lg:w-56 transition-all"
             />
           </div>
 
@@ -347,28 +347,28 @@ export default function DashboardLayout() {
           <div className="relative">
             <button
               onClick={() => setNotifOpen(!notifOpen)}
-              className="relative text-zinc-400 hover:text-zinc-100 transition-colors p-2 bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 rounded-xl cursor-pointer"
+              className="relative text-slate-500 hover:text-slate-800 transition-colors p-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl cursor-pointer"
               aria-label="Thông báo"
             >
               <Bell className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-              {unread > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-violet-500 rounded-full" />}
+              {unread > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-600 rounded-full" />}
             </button>
             {notifOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
-                <div className="absolute right-0 top-11 z-50 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl w-72 sm:w-80 max-w-[calc(100vw-32px)] overflow-hidden animate-[fadeInScale_0.15s_ease_both]">
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-900/50">
-                    <span className="text-sm font-semibold text-zinc-100">Thông báo</span>
+                <div className="absolute right-0 top-11 z-50 bg-white border border-slate-200 rounded-xl shadow-xl w-72 sm:w-80 max-w-[calc(100vw-32px)] overflow-hidden animate-[fadeInScale_0.15s_ease_both]">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/70">
+                    <span className="text-sm font-semibold text-slate-900">Thông báo</span>
                     <button
                       onClick={() => setRead(new Set(notifItems.map((n) => n.id)))}
-                      className="text-xs text-violet-400 hover:underline font-medium cursor-pointer"
+                      className="text-xs text-indigo-600 hover:underline font-medium cursor-pointer"
                     >
                       Đọc tất cả
                     </button>
                   </div>
-                  <div className="divide-y divide-zinc-800 max-h-[300px] overflow-y-auto">
+                  <div className="divide-y divide-slate-100 max-h-[300px] overflow-y-auto">
                     {notifItems.length === 0 ? (
-                      <div className="p-6 text-center text-xs text-zinc-500 font-medium">
+                      <div className="p-6 text-center text-xs text-slate-400 font-medium">
                         Không có thông báo mới nào
                       </div>
                     ) : (
@@ -376,18 +376,18 @@ export default function DashboardLayout() {
                         <div
                           key={n.id}
                           onClick={() => setRead((r) => new Set([...r, n.id]))}
-                          className={`flex gap-3 px-4 py-3 cursor-pointer hover:bg-zinc-800/30 transition-colors ${
-                            !read.has(n.id) ? 'bg-violet-600/[0.03]' : ''
+                          className={`flex gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors ${
+                            !read.has(n.id) ? 'bg-indigo-50/40' : ''
                           }`}
                         >
                           <div className="mt-0.5">{notifIcons[n.type]}</div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-xs font-semibold text-zinc-100 flex items-center gap-1.5">
+                            <div className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
                               {n.title}
-                              {!read.has(n.id) && <span className="w-1.5 h-1.5 rounded-full bg-violet-500 flex-shrink-0" />}
+                              {!read.has(n.id) && <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 flex-shrink-0" />}
                             </div>
-                            <div className="text-[11px] text-zinc-400 mt-1 leading-relaxed">{n.desc}</div>
-                            <div className="text-[10px] text-zinc-500 mt-1.5 font-mono">{n.time}</div>
+                            <div className="text-[11px] text-slate-500 mt-1 leading-relaxed">{n.desc}</div>
+                            <div className="text-[10px] text-slate-400 mt-1.5 font-mono">{n.time}</div>
                           </div>
                         </div>
                       ))
@@ -402,29 +402,29 @@ export default function DashboardLayout() {
           <div className="relative" ref={profileMenuRef}>
             <div
               onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-              className="flex items-center gap-2 pl-3 sm:pl-4 border-l border-zinc-800 cursor-pointer group select-none"
+              className="flex items-center gap-2 pl-3 sm:pl-4 border-l border-slate-200 cursor-pointer group select-none"
             >
-              <div className="w-8 h-8 rounded-full bg-violet-600/15 border border-violet-500/20 flex items-center justify-center text-violet-400 font-mono text-xs font-semibold">
+              <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono text-xs font-semibold flex items-center justify-center shadow-xs">
                 {role === 'admin' ? 'SA' : 'QT'}
               </div>
               <div className="hidden sm:block text-left">
-                <div className="text-xs font-semibold text-zinc-200 truncate max-w-[110px] lg:max-w-[140px]">
+                <div className="text-xs font-semibold text-slate-800 truncate max-w-[110px] lg:max-w-[140px]">
                   {role === 'admin' ? (adminInfo.fullName || 'Super Admin') : 'Quản trị viên'}
                 </div>
-                <div className="text-[10px] text-zinc-500 font-mono mt-0.5 truncate max-w-[110px] lg:max-w-[140px]">
+                <div className="text-[10px] text-slate-400 font-mono mt-0.5 truncate max-w-[110px] lg:max-w-[140px]">
                   {role === 'admin' ? 'Hệ thống' : (orgInfo.orgName || 'Tổ chức')}
                 </div>
               </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-200 transition-transform duration-200 ${profileMenuOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition-transform duration-200 ${profileMenuOpen ? 'rotate-180' : ''}`} />
             </div>
 
             {profileMenuOpen && (
-              <div className="absolute right-0 top-11 z-50 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl w-48 py-1.5 overflow-hidden animate-[fadeInScale_0.15s_ease_both]">
-                <div className="px-3 py-2 border-b border-zinc-800/80 sm:hidden">
-                  <div className="text-xs font-semibold text-zinc-200 truncate">
+              <div className="absolute right-0 top-11 z-50 bg-white border border-slate-200 rounded-xl shadow-xl w-48 py-1.5 overflow-hidden animate-[fadeInScale_0.15s_ease_both]">
+                <div className="px-3 py-2 border-b border-slate-100 sm:hidden">
+                  <div className="text-xs font-semibold text-slate-800 truncate">
                     {role === 'admin' ? (adminInfo.fullName || 'Super Admin') : 'Quản trị viên'}
                   </div>
-                  <div className="text-[10px] text-zinc-500 font-mono mt-0.5 truncate">
+                  <div className="text-[10px] text-slate-400 font-mono mt-0.5 truncate">
                     {role === 'admin' ? (adminInfo.username || 'admin') : (orgInfo.email || 'admin@abctech.vn')}
                   </div>
                 </div>
@@ -434,18 +434,18 @@ export default function DashboardLayout() {
                     setProfileMenuOpen(false);
                     navigate(role === 'admin' ? '/admin/settings' : '/org/settings');
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-zinc-300 hover:bg-zinc-800/40 transition-colors text-left cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors text-left cursor-pointer"
                 >
-                  <Settings className="w-3.5 h-3.5 text-zinc-500" />
+                  <Settings className="w-3.5 h-3.5 text-slate-400" />
                   Cài đặt tài khoản
                 </button>
-                <div className="my-1 border-t border-zinc-800" />
+                <div className="my-1 border-t border-slate-100" />
                 <button
                   onClick={() => {
                     setProfileMenuOpen(false);
                     handleLogout();
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 transition-colors font-medium text-left cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 transition-colors font-medium text-left cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   Đăng xuất
@@ -456,7 +456,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* Content body */}
-        <main className="flex-grow overflow-y-auto p-3.5 sm:p-5 md:p-6 bg-zinc-950">
+        <main className="flex-grow overflow-y-auto p-4 sm:p-6 md:p-8 bg-slate-50/50">
           <Outlet />
         </main>
       </div>

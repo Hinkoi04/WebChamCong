@@ -287,28 +287,28 @@ export default function OrgAutoAttendancePage() {
       {/* Header with Live Clock */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
             Trạm chấm công Kiosk AI
             <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold border ${isCheckInTab
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-              : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              : 'bg-amber-50 text-amber-700 border-amber-200'
               }`}>
               {isCheckInTab ? 'Chế độ Vào Ca' : 'Chế độ Tan Ca'}
             </span>
           </h2>
-          <p className="text-xs text-zinc-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Chọn tab tương ứng khi đến hoặc về để hệ thống ghi nhận chính xác và tránh chấm lặp
           </p>
         </div>
 
         {/* Digital Clock */}
-        <div className="flex items-center gap-3 px-4 py-2 bg-zinc-900/90 border border-zinc-800 rounded-2xl shadow-inner shrink-0">
-          <Clock className="w-5 h-5 text-violet-400" />
+        <div className="flex items-center gap-3 px-4 py-2 bg-white border border-slate-200 rounded-2xl shadow-xs shrink-0">
+          <Clock className="w-5 h-5 text-indigo-600" />
           <div className="font-mono text-right">
-            <div className="text-sm font-bold text-zinc-100">
+            <div className="text-sm font-bold text-slate-900">
               {currentTime.toLocaleTimeString('vi-VN', { hour12: false })}
             </div>
-            <div className="text-[10px] text-zinc-400">
+            <div className="text-[10px] text-slate-500">
               {currentTime.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
             </div>
           </div>
@@ -316,24 +316,24 @@ export default function OrgAutoAttendancePage() {
       </div>
 
       {/* Main Container */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl">
+      <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs">
 
         {/* 2 MAIN TABS: VÀO CA vs TAN CA */}
-        <div className="grid grid-cols-2 p-2 bg-zinc-950/80 border-b border-zinc-800 gap-2">
+        <div className="grid grid-cols-2 p-2 bg-slate-50 border-b border-slate-200 gap-2">
 
           {/* Tab 1: VÀO CA (Check-in) */}
           <button
             type="button"
             onClick={() => handleTabChange('CHECK_IN')}
             className={`py-3.5 px-4 rounded-2xl flex items-center justify-center gap-3 font-bold text-sm transition-all cursor-pointer ${isCheckInTab
-              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 ring-2 ring-emerald-400/40'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
+              ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-400/40'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
           >
-            <LogIn className={`w-5 h-5 ${isCheckInTab ? 'text-white' : 'text-emerald-400'}`} />
+            <LogIn className={`w-5 h-5 ${isCheckInTab ? 'text-white' : 'text-emerald-600'}`} />
             <span>VÀO CA (Check-in)</span>
             {isCheckInTab && (
-              <span className="text-[10px] px-2 py-0.5 bg-emerald-700/80 text-emerald-100 rounded-full uppercase tracking-wider font-semibold">
+              <span className="text-[10px] px-2 py-0.5 bg-emerald-700 text-white rounded-full uppercase tracking-wider font-semibold">
                 Đang mở
               </span>
             )}
@@ -344,14 +344,14 @@ export default function OrgAutoAttendancePage() {
             type="button"
             onClick={() => handleTabChange('CHECK_OUT')}
             className={`py-3.5 px-4 rounded-2xl flex items-center justify-center gap-3 font-bold text-sm transition-all cursor-pointer ${!isCheckInTab
-              ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30 ring-2 ring-amber-400/40'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
+              ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-400/40'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
           >
-            <LogOut className={`w-5 h-5 ${!isCheckInTab ? 'text-white' : 'text-amber-400'}`} />
+            <LogOut className={`w-5 h-5 ${!isCheckInTab ? 'text-white' : 'text-amber-600'}`} />
             <span>TAN CA (Check-out)</span>
             {!isCheckInTab && (
-              <span className="text-[10px] px-2 py-0.5 bg-amber-700/80 text-amber-100 rounded-full uppercase tracking-wider font-semibold">
+              <span className="text-[10px] px-2 py-0.5 bg-amber-700 text-white rounded-full uppercase tracking-wider font-semibold">
                 Đang mở
               </span>
             )}
@@ -360,20 +360,20 @@ export default function OrgAutoAttendancePage() {
         </div>
 
         {/* Tab Guidance Banner */}
-        <div className={`flex items-center gap-3 px-6 py-3.5 border-b border-zinc-800/80 transition-colors ${isCheckInTab ? 'bg-emerald-500/10' : 'bg-amber-500/10'
+        <div className={`flex items-center gap-3 px-6 py-3.5 border-b border-slate-200 transition-colors ${isCheckInTab ? 'bg-emerald-50/70' : 'bg-amber-50/70'
           }`}>
-          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${isCheckInTab ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${isCheckInTab ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200'
             }`}>
             <ShieldCheck className="w-4 h-4" />
           </div>
           <div className="flex-1 text-xs">
             {isCheckInTab ? (
-              <p className="text-zinc-200">
-                Chế độ <strong className="text-emerald-400">VÀO CA (Check-in)</strong>: Dành cho nhân viên đến làm việc đầu ca. Nếu đã check-in rồi, hệ thống sẽ nhắc nhở và ngăn điểm danh trùng.
+              <p className="text-slate-700">
+                Chế độ <strong className="text-emerald-700">VÀO CA (Check-in)</strong>: Dành cho nhân viên đến làm việc đầu ca. Nếu đã check-in rồi, hệ thống sẽ nhắc nhở và ngăn điểm danh trùng.
               </p>
             ) : (
-              <p className="text-zinc-200">
-                Chế độ <strong className="text-amber-400">TAN CA (Check-out)</strong>: Dành cho nhân viên ra về/kết thúc ca. Chỉ ghi nhận cho nhân viên đã hoàn thành check-in trong ngày.
+              <p className="text-slate-700">
+                Chế độ <strong className="text-amber-700">TAN CA (Check-out)</strong>: Dành cho nhân viên ra về/kết thúc ca. Chỉ ghi nhận cho nhân viên đã hoàn thành check-in trong ngày.
               </p>
             )}
           </div>
@@ -383,28 +383,24 @@ export default function OrgAutoAttendancePage() {
 
           {/* Sub-mode & Camera Switch Toolbar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-            <div className="flex bg-zinc-950 p-1 rounded-2xl border border-zinc-800 gap-1">
+            <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 gap-1">
               <button
                 onClick={() => setMode('face')}
                 className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-xs transition-all cursor-pointer ${mode === 'face'
-                  ? isCheckInTab
-                    ? 'bg-emerald-600/90 text-white shadow-md shadow-emerald-500/20'
-                    : 'bg-amber-600/90 text-white shadow-md shadow-amber-500/20'
-                  : 'text-zinc-500 hover:text-zinc-300'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
                   }`}
               >
-                <ScanFace className="w-4 h-4" /> Quét khuôn mặt AI
+                <ScanFace className="w-4 h-4 text-indigo-600" /> Quét khuôn mặt AI
               </button>
               <button
                 onClick={() => setMode('manual')}
                 className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-xs transition-all cursor-pointer ${mode === 'manual'
-                  ? isCheckInTab
-                    ? 'bg-emerald-600/90 text-white shadow-md shadow-emerald-500/20'
-                    : 'bg-amber-600/90 text-white shadow-md shadow-amber-500/20'
-                  : 'text-zinc-500 hover:text-zinc-300'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
                   }`}
               >
-                <Keyboard className="w-4 h-4" /> Chấm công thủ công
+                <Keyboard className="w-4 h-4 text-indigo-600" /> Chấm công thủ công
               </button>
             </div>
 
@@ -413,14 +409,14 @@ export default function OrgAutoAttendancePage() {
               <button
                 type="button"
                 onClick={toggleCamera}
-                className={`flex items-center gap-2.5 px-4 py-2 rounded-2xl border text-xs font-bold transition-all cursor-pointer shadow-md ${isCameraActive
+                className={`flex items-center gap-2.5 px-4 py-2 rounded-2xl border text-xs font-bold transition-all cursor-pointer shadow-xs ${isCameraActive
                   ? isCheckInTab
-                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
-                    : 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
-                  : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100/70'
+                    : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100/70'
+                  : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
               >
-                <div className={`w-2.5 h-2.5 rounded-full ${isCameraActive ? (isCheckInTab ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400 animate-pulse') : 'bg-zinc-600'}`} />
+                <div className={`w-2.5 h-2.5 rounded-full ${isCameraActive ? (isCheckInTab ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500 animate-pulse') : 'bg-slate-400'}`} />
                 {isCameraActive ? (
                   <>
                     <Camera className="w-4 h-4" />
@@ -428,8 +424,8 @@ export default function OrgAutoAttendancePage() {
                   </>
                 ) : (
                   <>
-                    <CameraOff className="w-4 h-4 text-red-400" />
-                    <span className="text-zinc-300">Camera: Đang TẮT</span>
+                    <CameraOff className="w-4 h-4 text-rose-500" />
+                    <span className="text-slate-700">Camera: Đang TẮT</span>
                   </>
                 )}
               </button>
@@ -440,7 +436,7 @@ export default function OrgAutoAttendancePage() {
 
             {/* Left Viewport (Camera or Manual Icon) */}
             <div className="lg:col-span-7 w-full">
-              <div className={`w-full aspect-4/3 sm:aspect-video rounded-3xl border-2 bg-black overflow-hidden relative shadow-2xl flex items-center justify-center transition-colors ${isCheckInTab ? 'border-emerald-500/40' : 'border-amber-500/40'
+              <div className={`w-full aspect-4/3 sm:aspect-video rounded-3xl border-2 bg-slate-950 overflow-hidden relative shadow-md flex items-center justify-center transition-colors ${isCheckInTab ? 'border-emerald-500/40' : 'border-amber-500/40'
                 }`}>
                 {mode === 'face' ? (
                   isCameraActive ? (
@@ -459,12 +455,12 @@ export default function OrgAutoAttendancePage() {
                         type="button"
                         onClick={() => setIsMirrored(prev => !prev)}
                         title={isMirrored ? 'Đang bật lật ảnh gương (Selfie). Nhấn để tắt' : 'Đang tắt lật ảnh gương. Nhấn để bật'}
-                        className="absolute top-3 right-3 z-10 p-2.5 rounded-xl bg-black/60 hover:bg-black/80 text-zinc-300 hover:text-white border border-white/10 backdrop-blur-md transition-all cursor-pointer shadow-lg"
+                        className="absolute top-3 right-3 z-10 p-2.5 rounded-xl bg-black/60 hover:bg-black/80 text-white/90 hover:text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer shadow-lg"
                       >
                         <FlipHorizontal className="w-4 h-4" />
                       </button>
 
-                      {/* Biometric Scanning Oval Overlay - Không dùng scale để tránh giật khung hình mobile */}
+                      {/* Biometric Scanning Oval Overlay */}
                       {!cooldown && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           <div className={`relative w-48 h-60 sm:w-56 sm:h-72 rounded-[45%] border-2 border-dashed transition-colors duration-300 ${scanning
@@ -506,28 +502,28 @@ export default function OrgAutoAttendancePage() {
 
                       {/* Camera opening state */}
                       {!stream && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-600 bg-zinc-950">
-                          <Camera className="w-12 h-12 mb-3 opacity-20 animate-pulse" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-900">
+                          <Camera className="w-12 h-12 mb-3 opacity-30 animate-pulse text-indigo-400" />
                           <p className="text-xs">Đang mở camera và kích hoạt AI RetinaFace...</p>
                         </div>
                       )}
                     </>
                   ) : (
                     /* Camera Turned OFF Standby Screen */
-                    <div className="flex flex-col items-center justify-center text-zinc-500 p-8 text-center bg-zinc-950/90 w-full h-full">
-                      <div className="w-16 h-16 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4 text-zinc-600 shadow-inner">
-                        <CameraOff className="w-8 h-8 text-zinc-500" />
+                    <div className="flex flex-col items-center justify-center text-slate-500 p-8 text-center bg-slate-100 w-full h-full">
+                      <div className="w-16 h-16 rounded-3xl bg-white border border-slate-200 flex items-center justify-center mb-4 text-slate-400 shadow-xs">
+                        <CameraOff className="w-8 h-8 text-slate-400" />
                       </div>
-                      <h4 className="text-base font-bold text-zinc-200">Camera đang tạm dừng</h4>
-                      <p className="text-xs mt-1.5 text-zinc-400 max-w-xs leading-relaxed">
+                      <h4 className="text-base font-bold text-slate-800">Camera đang tạm dừng</h4>
+                      <p className="text-xs mt-1.5 text-slate-500 max-w-xs leading-relaxed">
                         Camera và tiến trình quét AI đã được tắt để tiết kiệm tài nguyên.
                       </p>
                       <button
                         type="button"
                         onClick={toggleCamera}
-                        className={`mt-5 px-6 py-2.5 rounded-xl font-bold text-xs shadow-lg transition-all cursor-pointer text-white flex items-center gap-2 ${isCheckInTab
-                          ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/25'
-                          : 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/25'
+                        className={`mt-5 px-6 py-2.5 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer text-white flex items-center gap-2 ${isCheckInTab
+                          ? 'bg-emerald-600 hover:bg-emerald-700'
+                          : 'bg-amber-600 hover:bg-amber-700'
                           }`}
                       >
                         <Camera className="w-4 h-4" />
@@ -536,24 +532,24 @@ export default function OrgAutoAttendancePage() {
                     </div>
                   )
                 ) : (
-                  <div className="flex flex-col items-center justify-center text-zinc-500 p-8 text-center">
-                    <Keyboard className="w-16 h-16 mb-4 opacity-30 text-violet-400" />
-                    <p className="text-sm font-semibold text-zinc-200">Chế độ chấm công thủ công</p>
-                    <p className="text-xs mt-1 text-zinc-500">Dành cho trường hợp nhân viên quên đăng ký khuôn mặt</p>
+                  <div className="flex flex-col items-center justify-center text-slate-400 p-8 text-center bg-slate-900 w-full h-full">
+                    <Keyboard className="w-16 h-16 mb-4 opacity-40 text-indigo-400" />
+                    <p className="text-sm font-semibold text-white">Chế độ chấm công thủ công</p>
+                    <p className="text-xs mt-1 text-slate-400">Dành cho trường hợp nhân viên quên đăng ký khuôn mặt</p>
                   </div>
                 )}
               </div>
               <canvas ref={canvasRef} className="hidden" />
 
-              {/* Status Message pill under camera - min height cố định để tránh đẩy layout */}
+              {/* Status Message pill under camera */}
               {mode === 'face' && isCameraActive && (
-                <div className="mt-4 flex items-center gap-2.5 px-4 py-3 bg-zinc-950/60 border border-zinc-800/80 rounded-2xl min-h-[46px]">
+                <div className="mt-4 flex items-center gap-2.5 px-4 py-3 bg-white border border-slate-200 rounded-2xl min-h-[46px] shadow-xs">
                   {scanning ? (
-                    <RefreshCw className={`w-4 h-4 animate-spin shrink-0 ${isCheckInTab ? 'text-emerald-400' : 'text-amber-400'}`} />
+                    <RefreshCw className={`w-4 h-4 animate-spin shrink-0 ${isCheckInTab ? 'text-emerald-600' : 'text-amber-600'}`} />
                   ) : (
-                    <Sparkles className={`w-4 h-4 shrink-0 animate-pulse ${isCheckInTab ? 'text-emerald-400' : 'text-amber-400'}`} />
+                    <Sparkles className={`w-4 h-4 shrink-0 animate-pulse ${isCheckInTab ? 'text-emerald-600' : 'text-amber-600'}`} />
                   )}
-                  <p className="text-xs font-medium text-zinc-300 truncate">{statusMessage}</p>
+                  <p className="text-xs font-medium text-slate-700 truncate">{statusMessage}</p>
                 </div>
               )}
             </div>
@@ -561,15 +557,15 @@ export default function OrgAutoAttendancePage() {
             {/* Right Information & Form Panel */}
             <div className="lg:col-span-5 w-full flex flex-col gap-5">
               {mode === 'manual' ? (
-                <form onSubmit={handleManualCheckIn} className="w-full p-6 bg-zinc-950/60 border border-zinc-800 rounded-3xl space-y-5">
+                <form onSubmit={handleManualCheckIn} className="w-full p-6 bg-slate-50/70 border border-slate-200 rounded-3xl space-y-5 shadow-xs">
                   <div>
-                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
                       Chọn nhân viên {isCheckInTab ? 'Vào ca' : 'Tan ca'}
                     </label>
                     <select
                       value={staffId}
                       onChange={(e) => setStaffId(e.target.value)}
-                      className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 focus:outline-none focus:border-violet-500 transition-all cursor-pointer"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer shadow-xs"
                       disabled={scanning}
                     >
                       <option value="">-- Chọn nhân viên --</option>
@@ -584,54 +580,54 @@ export default function OrgAutoAttendancePage() {
                   <button
                     type="submit"
                     disabled={scanning || !staffId}
-                    className={`w-full py-3.5 rounded-xl font-bold text-xs shadow-lg transition-all disabled:opacity-50 text-white flex items-center justify-center gap-2 cursor-pointer ${isCheckInTab
-                      ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/25'
-                      : 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/25'
+                    className={`w-full py-3.5 rounded-xl font-bold text-xs shadow-xs transition-all disabled:opacity-50 text-white flex items-center justify-center gap-2 cursor-pointer ${isCheckInTab
+                      ? 'bg-emerald-600 hover:bg-emerald-700'
+                      : 'bg-amber-600 hover:bg-amber-700'
                       }`}
                   >
                     {scanning ? 'Đang xử lý...' : `XÁC NHẬN ${isCheckInTab ? 'CHECK-IN' : 'CHECK-OUT'} THỦ CÔNG`}
                   </button>
                 </form>
               ) : (
-                <div className="w-full p-6 bg-zinc-950/60 border border-zinc-800 rounded-3xl space-y-4">
-                  <h4 className="text-sm font-bold text-zinc-200 flex items-center gap-2">
-                    <UserCheck className={`w-4 h-4 ${isCheckInTab ? 'text-emerald-400' : 'text-amber-400'}`} />
+                <div className="w-full p-6 bg-slate-50/70 border border-slate-200 rounded-3xl space-y-4 shadow-xs">
+                  <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <UserCheck className={`w-4 h-4 ${isCheckInTab ? 'text-emerald-600' : 'text-amber-600'}`} />
                     Trạng thái Kiosk AI
                   </h4>
-                  <p className="text-xs text-zinc-400 leading-relaxed">
-                    Camera đang tự động quét liên tục cho chế độ <strong className={isCheckInTab ? 'text-emerald-300' : 'text-amber-300'}>{isCheckInTab ? 'VÀO CA' : 'TAN CA'}</strong>. Nhân viên chỉ cần đứng trước màn hình 1-2 giây.
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Camera đang tự động quét liên tục cho chế độ <strong className={isCheckInTab ? 'text-emerald-700' : 'text-amber-700'}>{isCheckInTab ? 'VÀO CA' : 'TAN CA'}</strong>. Nhân viên chỉ cần đứng trước màn hình 1-2 giây.
                   </p>
-                  <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-xs text-zinc-500">
-                    <span>Tổng nhân sự: <strong className="text-zinc-300">{staffList.length}</strong></span>
-                    <span>AI Detector: <strong className="text-emerald-400">RetinaFace</strong></span>
+                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+                    <span>Tổng nhân sự: <strong className="text-slate-800">{staffList.length}</strong></span>
+                    <span>AI Detector: <strong className="text-emerald-700">RetinaFace</strong></span>
                   </div>
                 </div>
               )}
 
               {/* Warning / Error Notification Box */}
               {error && (
-                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-start gap-3 animate-in fade-in">
-                  <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 animate-in fade-in shadow-xs">
+                  <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-xs font-bold text-amber-300">Thông báo từ hệ thống</h4>
-                    <p className="text-xs text-amber-200/90 mt-0.5 font-medium">{error}</p>
+                    <h4 className="text-xs font-bold text-amber-800">Thông báo từ hệ thống</h4>
+                    <p className="text-xs text-amber-700 mt-0.5 font-medium">{error}</p>
                   </div>
                 </div>
               )}
 
               {/* Success Result Box */}
               {result && !error && (
-                <div className={`p-5 rounded-2xl border space-y-3 animate-in fade-in ${isCheckInTab
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
-                  : 'bg-amber-500/10 border-amber-500/30 text-amber-200'
+                <div className={`p-5 rounded-2xl border space-y-3 animate-in fade-in shadow-xs ${isCheckInTab
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                  : 'bg-amber-50 border-amber-200 text-amber-900'
                   }`}>
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isCheckInTab ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isCheckInTab ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
                       }`}>
                       <CheckCircle2 className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white">
+                      <h4 className="text-sm font-bold text-slate-900">
                         {result.staffName || `Nhân viên #${result.staffId}`}
                       </h4>
                       <p className="text-xs opacity-80 font-mono">Mã: {result.staffCode || 'N/A'}</p>
@@ -641,13 +637,13 @@ export default function OrgAutoAttendancePage() {
                   <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-current/20">
                     <div>
                       <span className="opacity-75">Giờ vào: </span>
-                      <strong className="text-white font-mono">
+                      <strong className="text-slate-900 font-mono">
                         {result.checkInTime ? new Date(result.checkInTime).toLocaleTimeString('vi-VN') : '—'}
                       </strong>
                     </div>
                     <div>
                       <span className="opacity-75">Giờ ra: </span>
-                      <strong className="text-white font-mono">
+                      <strong className="text-slate-900 font-mono">
                         {result.checkOutTime ? new Date(result.checkOutTime).toLocaleTimeString('vi-VN') : '—'}
                       </strong>
                     </div>

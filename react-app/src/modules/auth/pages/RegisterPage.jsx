@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { useToast } from '../../../contexts/ToastContext';
+import { Scan } from 'lucide-react';
 
 export default function RegisterPage() {
   const { showToast } = useToast();
@@ -33,29 +34,42 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-zinc-950 p-4 sm:p-5">
-      <div className="w-full max-w-[500px] bg-zinc-900 border border-zinc-800 rounded-2xl p-6 sm:p-10 shadow-2xl">
-        <h2 className="font-heading text-2xl sm:text-3xl font-bold text-zinc-100 text-center mb-2">Đăng Ký Tổ Chức</h2>
-        <p className="text-zinc-400 text-center text-xs sm:text-sm mb-6 sm:mb-8">Tham gia nền tảng chấm công nhận diện khuôn mặt</p>
+    <div className="flex items-center justify-center min-h-screen bg-slate-50 p-4 sm:p-6 font-sans">
+      <div className="w-full max-w-[500px] bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-xl shadow-slate-200/50">
+        {/* Brand Icon */}
+        <div className="flex justify-center mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs">
+            <Scan className="w-6 h-6" />
+          </div>
+        </div>
+
+        <h2 className="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 text-center mb-1 tracking-tight">
+          Đăng Ký Tổ Chức
+        </h2>
+        <p className="text-slate-500 text-center text-xs sm:text-sm mb-6 sm:mb-8">
+          Tham gia nền tảng chấm công nhận diện khuôn mặt AI
+        </p>
 
         {error && (
-          <div className="block w-full py-2.5 px-4 mb-5 text-sm font-semibold rounded-lg text-center bg-red-500/10 text-red-400 border border-red-500/20">
+          <div className="block w-full py-2.5 px-4 mb-5 text-sm font-semibold rounded-xl text-center bg-rose-50 text-rose-600 border border-rose-200">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="block w-full py-2.5 px-4 mb-5 text-sm font-semibold rounded-lg text-center bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <div className="block w-full py-2.5 px-4 mb-5 text-sm font-semibold rounded-xl text-center bg-emerald-50 text-emerald-600 border border-emerald-200">
             Đăng ký thành công! Đang chuyển hướng...
           </div>
         )}
 
-        <form onSubmit={handleRegister}>
-          <div className="mb-5 text-left">
-            <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Tên tổ chức / Doanh nghiệp</label>
+        <form onSubmit={handleRegister} className="space-y-4">
+          <div className="text-left">
+            <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">
+              Tên tổ chức / Doanh nghiệp *
+            </label>
             <input
               type="text"
-              className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 font-sans text-sm transition-all focus:outline-none focus:bg-zinc-900/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+              className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 placeholder:text-slate-400"
               placeholder="Ví dụ: Công ty TNHH Hinkoi"
               value={orgName}
               onChange={(e) => setOrgName(e.target.value)}
@@ -63,11 +77,13 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div className="mb-5 text-left">
-            <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Email quản trị</label>
+          <div className="text-left">
+            <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">
+              Email quản trị *
+            </label>
             <input
               type="email"
-              className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 font-sans text-sm transition-all focus:outline-none focus:bg-zinc-900/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+              className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 placeholder:text-slate-400"
               placeholder="admin@hinkoi.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -75,11 +91,13 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div className="mb-5 text-left">
-            <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Mật khẩu</label>
+          <div className="text-left">
+            <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">
+              Mật khẩu *
+            </label>
             <input
               type="password"
-              className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 font-sans text-sm transition-all focus:outline-none focus:bg-zinc-900/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+              className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 placeholder:text-slate-400"
               placeholder="Tối thiểu 6 ký tự"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -87,22 +105,26 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="mb-5 text-left">
-              <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Số điện thoại</label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="text-left">
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">
+                Số điện thoại
+              </label>
               <input
                 type="text"
-                className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 font-sans text-sm transition-all focus:outline-none focus:bg-zinc-900/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 placeholder:text-slate-400"
                 placeholder="09XXXXXXXX"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
             </div>
-            <div className="mb-5 text-left">
-              <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Mã số thuế</label>
+            <div className="text-left">
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">
+                Mã số thuế
+              </label>
               <input
                 type="text"
-                className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 font-sans text-sm transition-all focus:outline-none focus:bg-zinc-900/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 placeholder:text-slate-400"
                 placeholder="MST doanh nghiệp"
                 value={taxCode}
                 onChange={(e) => setTaxCode(e.target.value)}
@@ -110,11 +132,13 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="mb-5 text-left">
-            <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Địa chỉ trụ sở</label>
+          <div className="text-left">
+            <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">
+              Địa chỉ trụ sở
+            </label>
             <input
               type="text"
-              className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800 rounded-xl text-zinc-100 font-sans text-sm transition-all focus:outline-none focus:bg-zinc-900/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15"
+              className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 placeholder:text-slate-400"
               placeholder="Số nhà, Tên đường, Quận/Huyện, Tỉnh/TP"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
@@ -123,15 +147,18 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            className="w-full mt-3 py-3 px-6 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 text-white shadow-lg shadow-violet-600/25 hover:opacity-95 transition-all duration-200 cursor-pointer text-center"
+            className="w-full mt-2 py-3 px-6 text-sm font-semibold rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-700 transition-all duration-200 cursor-pointer text-center"
           >
             Đăng Ký Tài Khoản
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-zinc-400">
+        <p className="mt-6 text-center text-sm text-slate-500">
           Đã có tài khoản?{' '}
-          <span className="text-violet-400 cursor-pointer font-semibold hover:text-violet-300" onClick={() => navigate('/login')}>
+          <span
+            className="text-indigo-600 cursor-pointer font-semibold hover:text-indigo-700 hover:underline"
+            onClick={() => navigate('/login')}
+          >
             Đăng nhập
           </span>
         </p>
