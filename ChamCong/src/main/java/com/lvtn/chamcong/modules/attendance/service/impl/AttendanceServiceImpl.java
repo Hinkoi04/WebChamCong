@@ -162,8 +162,10 @@ public class AttendanceServiceImpl implements AttendanceService {
                     String.format("Không nhận ra khuôn mặt (độ giống cao nhất: %.1f%%). Vui lòng thử lại.", bestSimilarity * 100));
         }
 
-        // 4. Kiểm tra nhân viên còn active không
-        Staff staff = bestMatch.getStaff();
+        // 4. Lấy staff entity trong transaction hiện tại
+        Staff staff = staffRepository.findById(bestMatch.getStaffId())
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy thông tin nhân viên"));
+
         if (staff.getStatus() != StaffStatus.ACTIVE || staff.getIsDeleted()) {
             throw new BadRequestException("Nhân viên " + staff.getFullName() + " không còn hoạt động");
         }
@@ -171,6 +173,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         // 5. Ghi nhận chấm công theo tab hành động
         return recordAttendance(staff, base64Image, CheckInMethod.FACE, action);
     }
+
 
     /**
      * Logic ghi nhận chấm công dùng chung cho checkIn() và faceScan().
