@@ -135,17 +135,17 @@ export default function OrgTrashPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/org/staff')}
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
               title="Quay lại danh sách nhân viên"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
-            <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-              <Trash2 className="w-5 h-5 text-red-400" />
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-rose-500" />
               Thùng rác nhân sự
             </h2>
           </div>
-          <p className="text-xs text-zinc-500 mt-1 font-mono pl-8">
+          <p className="text-xs text-slate-500 mt-1 font-mono pl-8">
             {trashStaffs.length} nhân viên đang nằm trong thùng rác
           </p>
         </div>
@@ -157,17 +157,17 @@ export default function OrgTrashPage() {
               loadTrash();
               setCurrentPage(1);
             }}
-            className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-300 transition-colors cursor-pointer shadow-xs"
             title="Tải lại"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin text-violet-400" /> : <RefreshCw className="w-4 h-4" />}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin text-indigo-600" /> : <RefreshCw className="w-4 h-4" />}
           </button>
 
           {trashStaffs.length > 0 && (
             <>
               <button
                 onClick={handleRestoreAll}
-                className="flex items-center gap-2 px-3.5 py-2 bg-emerald-600/15 border border-emerald-500/30 hover:bg-emerald-600/25 text-emerald-400 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                className="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100/70 text-emerald-700 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-xs"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 Khôi phục tất cả
@@ -175,7 +175,7 @@ export default function OrgTrashPage() {
 
               <button
                 onClick={handleEmptyTrash}
-                className="flex items-center gap-2 px-3.5 py-2 bg-red-600/15 border border-red-500/30 hover:bg-red-600/25 text-red-400 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                className="flex items-center gap-2 px-3.5 py-2 bg-rose-50 border border-rose-200 hover:bg-rose-100/70 text-rose-700 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-xs"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 Dọn sạch thùng rác
@@ -186,16 +186,16 @@ export default function OrgTrashPage() {
       </div>
 
       {/* Warning Notice Banner */}
-      <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-3">
-        <ShieldAlert className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-        <div className="text-xs text-zinc-300 leading-relaxed">
-          <span className="font-bold text-amber-300">Lưu ý về Thùng rác:</span> Nhân viên khi xóa tại danh sách nhân sự sẽ được chuyển tạm vào đây và ngưng hoạt động. Bạn có thể <span className="text-emerald-400 font-semibold">Khôi phục</span> lại bất cứ lúc nào hoặc <span className="text-red-400 font-semibold">Xóa vĩnh viễn</span> để loại bỏ hoàn toàn dữ liệu.
+      <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
+        <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <div className="text-xs text-slate-700 leading-relaxed">
+          <span className="font-bold text-amber-800">Lưu ý về Thùng rác:</span> Nhân viên khi xóa tại danh sách nhân sự sẽ được chuyển tạm vào đây và ngưng hoạt động. Bạn có thể <span className="text-emerald-700 font-semibold">Khôi phục</span> lại bất cứ lúc nào hoặc <span className="text-rose-700 font-semibold">Xóa vĩnh viễn</span> để loại bỏ hoàn toàn dữ liệu.
         </div>
       </div>
 
       {/* Filter Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex gap-1.5 bg-zinc-900/40 border border-zinc-800/40 rounded-xl p-1 w-max max-w-full overflow-x-auto">
+        <div className="flex gap-1.5 bg-slate-100/80 border border-slate-200 rounded-xl p-1 w-max max-w-full overflow-x-auto">
           {departments.map((item) => (
             <button
               key={item}
@@ -205,8 +205,8 @@ export default function OrgTrashPage() {
               }}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 deptFilter === item
-                  ? 'bg-zinc-800 text-zinc-100 shadow-md border border-zinc-700/30'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
             >
               {item}
@@ -215,7 +215,7 @@ export default function OrgTrashPage() {
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             value={search}
             onChange={(e) => {
@@ -223,47 +223,47 @@ export default function OrgTrashPage() {
               setCurrentPage(1);
             }}
             placeholder="Tìm kiếm theo mã, tên..."
-            className="bg-zinc-900/60 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-violet-500/50 w-60 transition-all"
+            className="bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 w-60 transition-all shadow-xs"
           />
         </div>
       </div>
 
       {/* Trash Table */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-md">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-8 text-center text-sm text-zinc-500 font-medium">Đang tải danh sách thùng rác...</div>
+            <div className="p-8 text-center text-sm text-slate-500 font-medium">Đang tải danh sách thùng rác...</div>
           ) : (
-            <table className="w-full text-sm text-zinc-300">
+            <table className="w-full text-sm text-slate-700">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-800/10">
+                <tr className="border-b border-slate-200 bg-slate-50/75">
                   {['Mã NV', 'Họ tên', 'Phòng ban', 'Chức vụ', 'Lương cơ bản', 'Trạng thái', 'Thao tác'].map((h) => (
-                    <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                    <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/40">
+              <tbody className="divide-y divide-slate-100">
                 {paginatedTrash.map((s) => (
-                  <tr key={s.id} className="hover:bg-zinc-800/10 transition-colors">
-                    <td className="px-5 py-4 text-xs font-mono text-zinc-500">{s.staffCode}</td>
+                  <tr key={s.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="px-5 py-4 text-xs font-mono text-slate-500">{s.staffCode}</td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-red-600/15 flex items-center justify-center text-red-400 font-mono text-xs font-semibold">
+                        <div className="w-9 h-9 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 font-mono text-xs font-semibold">
                           {(s.fullName[0] + (s.fullName.trim().split(' ').pop()[0] || '')).toUpperCase()}
                         </div>
                         <div>
-                          <div className="text-sm font-semibold text-zinc-200 line-through opacity-80">{s.fullName}</div>
-                          <div className="text-[10px] text-zinc-500 font-mono mt-0.5">{s.email || 'Không có email'}</div>
+                          <div className="text-sm font-semibold text-slate-700 line-through opacity-80">{s.fullName}</div>
+                          <div className="text-[10px] text-slate-400 font-mono mt-0.5">{s.email || 'Không có email'}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-xs text-zinc-400 font-medium">{s.department || '—'}</td>
-                    <td className="px-5 py-4 text-xs text-zinc-300 font-medium">{s.position || 'Nhân viên'}</td>
-                    <td className="px-5 py-4 text-xs font-mono text-zinc-400">{fmtVND(s.baseSalary)}</td>
+                    <td className="px-5 py-4 text-xs text-slate-600 font-medium">{s.department || '—'}</td>
+                    <td className="px-5 py-4 text-xs text-slate-700 font-medium">{s.position || 'Nhân viên'}</td>
+                    <td className="px-5 py-4 text-xs font-mono text-slate-600">{fmtVND(s.baseSalary)}</td>
                     <td className="px-5 py-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
                         Đã xóa
                       </span>
                     </td>
@@ -272,7 +272,7 @@ export default function OrgTrashPage() {
                         <button
                           onClick={() => handleRestore(s.id, s.fullName)}
                           title="Khôi phục nhân viên"
-                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-colors cursor-pointer text-xs font-semibold"
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100/70 transition-colors cursor-pointer text-xs font-semibold shadow-xs"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           <span>Khôi phục</span>
@@ -280,7 +280,7 @@ export default function OrgTrashPage() {
                         <button
                           onClick={() => handlePermanentDelete(s.id, s.fullName)}
                           title="Xóa vĩnh viễn"
-                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer text-xs font-semibold"
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100/70 transition-colors cursor-pointer text-xs font-semibold shadow-xs"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           <span>Xóa vĩnh viễn</span>
@@ -295,11 +295,11 @@ export default function OrgTrashPage() {
 
           {!loading && filtered.length === 0 && (
             <div className="py-16 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-zinc-500 mx-auto mb-3">
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mx-auto mb-3">
                 <Trash2 className="w-6 h-6" />
               </div>
-              <p className="text-sm font-semibold text-zinc-300">Thùng rác trống</p>
-              <p className="text-xs text-zinc-500 font-mono mt-1">Không có nhân viên nào trong thùng rác</p>
+              <p className="text-sm font-semibold text-slate-800">Thùng rác trống</p>
+              <p className="text-xs text-slate-500 font-mono mt-1">Không có nhân viên nào trong thùng rác</p>
             </div>
           )}
         </div>

@@ -5,7 +5,7 @@ export default function AttendanceBarChart({ data = [], height = 220 }) {
 
   if (!data || data.length === 0) {
     return (
-      <div className="h-48 flex items-center justify-center text-xs text-zinc-500 font-medium">
+      <div className="h-48 flex items-center justify-center text-xs text-slate-400 font-medium">
         Không có dữ liệu biểu đồ trong khoảng thời gian này
       </div>
     );
@@ -43,8 +43,8 @@ export default function AttendanceBarChart({ data = [], height = 220 }) {
           const y = pT + iH - (v / roundedMax) * iH;
           return (
             <g key={v}>
-              <line x1={pL} x2={W - pR} y1={y} y2={y} stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" strokeWidth={0.7} />
-              <text x={pL - 6} y={y + 1} textAnchor="end" fontSize={8} fill="#71717a" dominantBaseline="middle" className="font-mono">
+              <line x1={pL} x2={W - pR} y1={y} y2={y} stroke="#e2e8f0" strokeDasharray="3 3" strokeWidth={0.8} />
+              <text x={pL - 6} y={y + 1} textAnchor="end" fontSize={8} fill="#94a3b8" dominantBaseline="middle" className="font-mono">
                 {v}
               </text>
             </g>
@@ -94,7 +94,7 @@ export default function AttendanceBarChart({ data = [], height = 220 }) {
               className="cursor-pointer group"
             >
               {/* Invisible full height hover capture */}
-              <rect x={pL + i * gW} y={pT} width={gW} height={iH} fill="transparent" className="hover:fill-white/[0.02]" />
+              <rect x={pL + i * gW} y={pT} width={gW} height={iH} fill="transparent" className="hover:fill-slate-100/60" />
 
               {/* Present Bar (Emerald) */}
               <rect
@@ -104,7 +104,7 @@ export default function AttendanceBarChart({ data = [], height = 220 }) {
                 height={Math.max(0, ph)}
                 fill="#10B981"
                 rx={Math.min(2, bW / 2)}
-                className="transition-all duration-150 group-hover:brightness-125"
+                className="transition-all duration-150 group-hover:brightness-110"
               />
 
               {/* Absent Bar (Red) */}
@@ -113,10 +113,10 @@ export default function AttendanceBarChart({ data = [], height = 220 }) {
                 y={pT + iH - Math.max(0, ah)}
                 width={bW}
                 height={Math.max(0, ah)}
-                fill="#EF4444"
+                fill="#F43F5E"
                 opacity={0.8}
                 rx={Math.min(2, bW / 2)}
-                className="transition-all duration-150 group-hover:brightness-125 group-hover:opacity-100"
+                className="transition-all duration-150 group-hover:brightness-110 group-hover:opacity-100"
               />
 
               {/* X Axis Label */}
@@ -126,7 +126,7 @@ export default function AttendanceBarChart({ data = [], height = 220 }) {
                   y={H - pB + 14}
                   textAnchor="middle"
                   fontSize={Math.max(7, Math.min(9, 140 / data.length))}
-                  fill="#a1a1aa"
+                  fill="#64748b"
                   className="font-medium"
                 >
                   {d.label || d.day}
@@ -140,40 +140,40 @@ export default function AttendanceBarChart({ data = [], height = 220 }) {
       {/* Floating Tooltip */}
       {tip && (
         <div
-          className="pointer-events-none absolute z-20 bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs shadow-2xl animate-[fadeInScale_0.15s_ease_both]"
+          className="pointer-events-none absolute z-20 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs shadow-xl animate-[fadeInScale_0.15s_ease_both]"
           style={{
             left: Math.min(Math.max(10, tip.x - 60), 450),
             top: Math.max(0, tip.y - 85)
           }}
         >
-          <div className="font-bold text-zinc-100 border-b border-zinc-800 pb-1 mb-1.5 flex items-center justify-between gap-3">
+          <div className="font-bold text-slate-800 border-b border-slate-100 pb-1 mb-1.5 flex items-center justify-between gap-3">
             <span>{tip.d.label || tip.d.day}</span>
-            {tip.d.dateStr && <span className="text-[10px] text-zinc-400 font-mono">{tip.d.dateStr}</span>}
+            {tip.d.dateStr && <span className="text-[10px] text-slate-400 font-mono">{tip.d.dateStr}</span>}
           </div>
           <div className="space-y-1">
-            <div className="flex items-center justify-between gap-4 text-emerald-400">
+            <div className="flex items-center justify-between gap-4 text-emerald-600 font-semibold">
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" /> Có mặt
+                <span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" /> Có mặt
               </span>
-              <span className="font-bold font-mono">{tip.d.present}</span>
+              <span className="font-mono">{tip.d.present}</span>
             </div>
             {tip.d.onTime !== undefined && (
-              <div className="flex items-center justify-between gap-4 text-zinc-400 text-[11px] pl-3.5">
+              <div className="flex items-center justify-between gap-4 text-slate-500 text-[11px] pl-3.5">
                 <span>• Đúng giờ:</span>
                 <span className="font-mono">{tip.d.onTime}</span>
               </div>
             )}
             {tip.d.late > 0 && (
-              <div className="flex items-center justify-between gap-4 text-amber-400 text-[11px] pl-3.5">
+              <div className="flex items-center justify-between gap-4 text-amber-600 text-[11px] pl-3.5">
                 <span>• Đi muộn:</span>
                 <span className="font-mono">{tip.d.late}</span>
               </div>
             )}
-            <div className="flex items-center justify-between gap-4 text-red-400">
+            <div className="flex items-center justify-between gap-4 text-rose-600 font-semibold">
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-sm bg-red-400 inline-block" /> Vắng mặt
+                <span className="w-2 h-2 rounded-sm bg-rose-500 inline-block" /> Vắng mặt
               </span>
-              <span className="font-bold font-mono">{tip.d.absent}</span>
+              <span className="font-mono">{tip.d.absent}</span>
             </div>
           </div>
         </div>

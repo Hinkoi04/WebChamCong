@@ -138,13 +138,13 @@ export default function OrgSalaryPage() {
   return (
     <div className="space-y-6">
       {/* Formula Note Banner */}
-      <div className="bg-violet-950/20 border border-violet-500/20 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs text-zinc-300">
+      <div className="bg-indigo-50/70 border border-indigo-200 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs text-slate-700 shadow-xs">
         <div className="flex items-center gap-2.5">
-          <span className="w-6 h-6 rounded-lg bg-violet-600/20 text-violet-400 flex items-center justify-center font-bold text-xs">💡</span>
+          <span className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs">💡</span>
           <div>
-            <span className="font-semibold text-violet-300">Quy tắc tính lương: </span>
-            <span>Ngày làm việc đầy đủ tính đủ 1 ngày công (<code className="text-zinc-200 font-mono">LCB / 26</code>). Ngày về sớm được tính theo giờ: </span>
-            <span className="font-mono text-emerald-400 font-semibold">LCB / 26 / (Số giờ ca) × Số giờ làm thực tế</span>.
+            <span className="font-semibold text-indigo-800">Quy tắc tính lương: </span>
+            <span>Ngày làm việc đầy đủ tính đủ 1 ngày công (<code className="text-slate-800 font-mono bg-white px-1 py-0.5 rounded border border-slate-200">LCB / 26</code>). Ngày về sớm được tính theo giờ: </span>
+            <span className="font-mono text-emerald-700 font-semibold">LCB / 26 / (Số giờ ca) × Số giờ làm thực tế</span>.
           </div>
         </div>
       </div>
@@ -152,8 +152,8 @@ export default function OrgSalaryPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold text-zinc-100">Bảng lương</h2>
-          <p className="text-xs text-zinc-500 mt-1 font-mono">
+          <h2 className="text-lg font-bold text-slate-900">Bảng lương</h2>
+          <p className="text-xs text-slate-500 mt-1 font-mono">
             {calculatedCount}/{filteredRows.length} nhân viên đã tính · Tổng chi: {fmt(totalCalculated)}
           </p>
         </div>
@@ -161,7 +161,7 @@ export default function OrgSalaryPage() {
         <div className="flex items-center gap-3 flex-wrap">
           {/* Search */}
           <div className="relative">
-            <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Tìm nhân viên..."
@@ -170,22 +170,22 @@ export default function OrgSalaryPage() {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="pl-9 pr-4 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-zinc-100 focus:outline-none focus:border-violet-500/50 w-48 transition-colors"
+              className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 w-48 transition-colors shadow-xs"
             />
           </div>
 
           {/* Month/Year Navigator */}
-          <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-xl px-1 py-1">
+          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-1.5 py-1 shadow-xs">
             <button
               onClick={() => {
                 goPrev();
                 setCurrentPage(1);
               }}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-xs font-bold text-zinc-100 font-mono px-3 min-w-[90px] text-center">
+            <span className="text-xs font-bold text-slate-800 font-mono px-3 min-w-[90px] text-center">
               Tháng {month}/{year}
             </span>
             <button
@@ -194,7 +194,7 @@ export default function OrgSalaryPage() {
                 setCurrentPage(1);
               }}
               disabled={isCurrentMonth}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -202,7 +202,7 @@ export default function OrgSalaryPage() {
 
           <button
             onClick={handleCalculateAll}
-            className="flex items-center gap-2 px-4 py-2 border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100/70 text-indigo-700 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-xs"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             Tính tất cả
@@ -211,7 +211,7 @@ export default function OrgSalaryPage() {
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-violet-600/15 cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition-all shadow-xs cursor-pointer disabled:opacity-50"
           >
             {exporting ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Download className="w-4 h-4" />}
             {exporting ? 'Đang xuất...' : 'Xuất bảng lương'}
@@ -220,50 +220,50 @@ export default function OrgSalaryPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-md">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-8 text-center text-sm text-zinc-500 font-medium">Đang tải dữ liệu tiền lương...</div>
+            <div className="p-8 text-center text-sm text-slate-500 font-medium">Đang tải dữ liệu tiền lương...</div>
           ) : (
-            <table className="w-full text-sm text-zinc-300">
+            <table className="w-full text-sm text-slate-700">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-800/10">
+                <tr className="border-b border-slate-200 bg-slate-50/75">
                   {['Nhân viên', 'Lương cơ bản', 'Ngày chuẩn', 'Ngày thực', 'Thưởng', 'Khấu trừ', 'Thực lĩnh', 'Thao tác'].map((h) => (
-                    <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 whitespace-nowrap">
+                    <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/40">
+              <tbody className="divide-y divide-slate-100">
                 {paginatedRows.map((r) => (
-                  <tr key={r.staffId} className="hover:bg-zinc-800/10 transition-colors">
+                  <tr key={r.staffId} className="hover:bg-slate-50/70 transition-colors">
                     <td className="px-5 py-4">
-                      <div className="text-sm font-semibold text-zinc-200">{r.fullName}</div>
-                      <div className="text-[10px] text-zinc-500 font-mono mt-0.5">{r.staffCode}</div>
+                      <div className="text-sm font-semibold text-slate-800">{r.fullName}</div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">{r.staffCode}</div>
                     </td>
-                    <td className="px-5 py-4 text-xs font-mono text-zinc-200">{fmt(r.base)}</td>
-                    <td className="px-5 py-4 text-xs font-mono text-zinc-500 text-center">
+                    <td className="px-5 py-4 text-xs font-mono text-slate-800">{fmt(r.base)}</td>
+                    <td className="px-5 py-4 text-xs font-mono text-slate-500 text-center">
                       {r.record ? r.record.standardDays : '—'}
                     </td>
                     <td className="px-5 py-4 font-mono">
                       {r.record ? (
-                        <span className={`text-xs font-bold ${r.record.workingDays < r.record.standardDays ? 'text-amber-400' : 'text-zinc-200'}`}>
+                        <span className={`text-xs font-bold ${r.record.workingDays < r.record.standardDays ? 'text-amber-600' : 'text-slate-800'}`}>
                           {r.record.workingDays}
                         </span>
-                      ) : <span className="text-zinc-500 text-xs">—</span>}
+                      ) : <span className="text-slate-400 text-xs">—</span>}
                     </td>
-                    <td className="px-5 py-4 text-xs font-mono text-emerald-400">
-                      {r.record && r.record.bonus > 0 ? `+${fmt(r.record.bonus)}` : <span className="text-zinc-600">—</span>}
+                    <td className="px-5 py-4 text-xs font-mono text-emerald-600">
+                      {r.record && r.record.bonus > 0 ? `+${fmt(r.record.bonus)}` : <span className="text-slate-400">—</span>}
                     </td>
-                    <td className="px-5 py-4 text-xs font-mono text-red-400">
-                      {r.record && r.record.deduction > 0 ? `-${fmt(r.record.deduction)}` : <span className="text-zinc-600">—</span>}
+                    <td className="px-5 py-4 text-xs font-mono text-rose-600">
+                      {r.record && r.record.deduction > 0 ? `-${fmt(r.record.deduction)}` : <span className="text-slate-400">—</span>}
                     </td>
                     <td className="px-5 py-4">
                       {r.record ? (
-                        <span className="text-sm font-bold text-violet-400 font-mono">{fmt(r.record.totalSalary)}</span>
+                        <span className="text-sm font-bold text-indigo-700 font-mono">{fmt(r.record.totalSalary)}</span>
                       ) : (
-                        <span className="text-zinc-500 text-xs italic font-medium">Chưa tính toán</span>
+                        <span className="text-slate-400 text-xs italic font-medium">Chưa tính toán</span>
                       )}
                     </td>
                     <td className="px-5 py-4">
@@ -273,15 +273,15 @@ export default function OrgSalaryPage() {
                             setSelectedStaff(r);
                             setDetailModalOpen(true);
                           }}
-                          className="flex items-center gap-1 px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/60 text-zinc-200 rounded-lg text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-sm"
+                          className="flex items-center gap-1 px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-xs"
                           title="Xem chi tiết bảng lương từng ngày"
                         >
-                          <Eye className="w-3.5 h-3.5 text-violet-400" />
+                          <Eye className="w-3.5 h-3.5 text-indigo-600" />
                           <span>Chi tiết</span>
                         </button>
                         <button
                           onClick={() => handleCalculate(r.staffId, r.fullName)}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-violet-600/10 hover:bg-violet-600/25 border border-violet-500/15 text-violet-400 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer"
+                          className="flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100/70 border border-indigo-200 text-indigo-700 rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-xs"
                         >
                           <Play className="w-3.5 h-3.5 fill-current" />
                           {r.record ? 'Tính lại' : 'Tính lương'}
@@ -292,17 +292,17 @@ export default function OrgSalaryPage() {
                 ))}
                 {filteredRows.length === 0 && (
                   <tr>
-                    <td colSpan="8" className="p-8 text-center text-sm text-zinc-500 font-medium">Không tìm thấy nhân viên nào phù hợp.</td>
+                    <td colSpan="8" className="p-8 text-center text-sm text-slate-500 font-medium">Không tìm thấy nhân viên nào phù hợp.</td>
                   </tr>
                 )}
               </tbody>
               <tfoot>
-                <tr className="bg-zinc-950 border-t border-zinc-800">
-                  <td colSpan={6} className="px-5 py-4 text-xs font-bold text-zinc-500 text-right uppercase tracking-wider">
+                <tr className="bg-slate-50 border-t border-slate-200">
+                  <td colSpan={6} className="px-5 py-4 text-xs font-bold text-slate-500 text-right uppercase tracking-wider">
                     Tổng chi thực tế (đã tính)
                   </td>
                   <td colSpan={2} className="px-5 py-4">
-                    <span className="text-base font-extrabold text-violet-400 font-mono">{fmt(totalCalculated)}</span>
+                    <span className="text-base font-extrabold text-indigo-700 font-mono">{fmt(totalCalculated)}</span>
                   </td>
                 </tr>
               </tfoot>

@@ -176,34 +176,34 @@ export default function CheckpointPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-5" style={{ minHeight: '100vh', background: 'radial-gradient(circle at center, #18181b 0%, #09090b 100%)' }}>
+    <div className="flex items-center justify-center min-h-screen p-5 bg-slate-50/50">
       <div className="absolute top-6 left-6">
         <button 
           onClick={handleBackToDashboard}
-          className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors cursor-pointer px-4 py-2 bg-zinc-900 rounded-xl border border-zinc-800 hover:border-zinc-700"
+          className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer px-4 py-2 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 shadow-xs"
         >
           <ArrowLeft className="w-5 h-5" /> Trở về
         </button>
       </div>
 
       <div className="w-full max-w-[900px] mx-auto text-center flex flex-col items-center">
-        <h1 className="text-3xl sm:text-5xl font-extrabold font-heading mb-3 bg-gradient-to-r from-violet-400 to-pink-500 bg-clip-text text-transparent">
+        <h1 className="text-3xl sm:text-5xl font-extrabold font-heading mb-3 text-slate-900">
           Trạm Chấm Công
         </h1>
-        <p className="text-zinc-400 mb-8 text-sm sm:text-base max-w-xl">
+        <p className="text-slate-500 mb-8 text-sm sm:text-base max-w-xl">
           {mode === 'face' 
             ? 'Căn chỉnh khuôn mặt vào giữa camera và nhập ID nhân viên để xác thực' 
             : 'Nhập ID nhân viên để chấm công thủ công (bỏ qua xác minh khuôn mặt)'}
         </p>
 
         {/* Mode Toggle */}
-        <div className="flex bg-zinc-900/80 p-1.5 rounded-2xl mb-8 border border-zinc-800 backdrop-blur-xl">
+        <div className="flex bg-white p-1.5 rounded-2xl mb-8 border border-slate-200 shadow-xs">
           <button
             onClick={() => mode !== 'face' && toggleMode()}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all cursor-pointer ${
               mode === 'face' 
-                ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/25' 
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                ? 'bg-indigo-600 text-white shadow-xs' 
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
             }`}
           >
             <ScanFace className="w-4 h-4" /> Quét khuôn mặt
@@ -212,8 +212,8 @@ export default function CheckpointPage() {
             onClick={() => mode !== 'manual' && toggleMode()}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all cursor-pointer ${
               mode === 'manual' 
-                ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/25' 
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                ? 'bg-indigo-600 text-white shadow-xs' 
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
             }`}
           >
             <Keyboard className="w-4 h-4" /> Thủ công
@@ -225,8 +225,8 @@ export default function CheckpointPage() {
           
           {/* Camera/Status Section */}
           <div className="w-full">
-            <div className={`w-full aspect-video rounded-3xl border-2 overflow-hidden relative shadow-2xl transition-all duration-500 ${
-              mode === 'face' ? 'border-violet-500/30 bg-black' : 'border-zinc-800 bg-zinc-900/50'
+            <div className={`w-full aspect-video rounded-3xl border border-slate-200 overflow-hidden relative shadow-xs transition-all duration-500 ${
+              mode === 'face' ? 'bg-slate-950' : 'bg-slate-100'
             }`}>
               
               {/* Camera Video */}
@@ -246,36 +246,36 @@ export default function CheckpointPage() {
                     type="button"
                     onClick={() => setIsMirrored(prev => !prev)}
                     title={isMirrored ? 'Đang bật lật ảnh gương (Selfie). Nhấn để tắt' : 'Đang tắt lật ảnh gương. Nhấn để bật'}
-                    className="absolute top-3 right-3 z-10 p-2.5 rounded-xl bg-black/60 hover:bg-black/80 text-zinc-300 hover:text-white border border-white/10 backdrop-blur-md transition-all cursor-pointer shadow-lg"
+                    className="absolute top-3 right-3 z-10 p-2.5 rounded-xl bg-black/60 hover:bg-black/80 text-white/90 hover:text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer shadow-lg"
                   >
                     <FlipHorizontal className="w-4 h-4" />
                   </button>
                   {!stream && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-500">
-                      <Camera className="w-12 h-12 mb-3 opacity-20" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-900">
+                      <Camera className="w-12 h-12 mb-3 opacity-30 text-indigo-400" />
                       <p className="text-sm">Đang mở camera...</p>
                     </div>
                   )}
                   {/* Face Guide Overlay */}
                   <div className="absolute inset-0 pointer-events-none border-[40px] border-black/40">
-                    <div className="w-full h-full border-2 border-dashed border-violet-500/50 rounded-full"></div>
+                    <div className="w-full h-full border-2 border-dashed border-indigo-400/60 rounded-full"></div>
                   </div>
                 </>
               )}
 
               {/* Manual Mode Placeholder */}
               {mode === 'manual' && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-500 bg-zinc-900/50">
-                  <Keyboard className="w-16 h-16 mb-4 opacity-20" />
-                  <p className="text-sm">Chế độ chấm công thủ công</p>
-                  <p className="text-xs mt-1 text-zinc-600">Không yêu cầu xác minh khuôn mặt</p>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-100">
+                  <Keyboard className="w-16 h-16 mb-4 opacity-30 text-indigo-500" />
+                  <p className="text-sm font-semibold text-slate-700">Chế độ chấm công thủ công</p>
+                  <p className="text-xs mt-1 text-slate-400">Không yêu cầu xác minh khuôn mặt</p>
                 </div>
               )}
 
               {/* Scanning Overlay */}
               {scanning && (
-                <div className="absolute inset-0 bg-violet-900/20 backdrop-blur-sm flex flex-col items-center justify-center">
-                  <div className="w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full animate-spin shadow-lg"></div>
+                <div className="absolute inset-0 bg-indigo-950/40 backdrop-blur-sm flex flex-col items-center justify-center">
+                  <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin shadow-lg"></div>
                   <span className="mt-4 text-sm font-bold text-white tracking-widest uppercase">
                     {mode === 'face' ? 'Đang phân tích khuôn mặt...' : 'Đang xử lý...'}
                   </span>
@@ -288,9 +288,9 @@ export default function CheckpointPage() {
 
           {/* Form Section */}
           <div className="w-full flex flex-col justify-center h-full gap-6">
-            <form onSubmit={handleCheckIn} className="w-full p-6 sm:p-8 bg-zinc-900/50 border border-zinc-800 rounded-3xl shadow-xl backdrop-blur-md">
+            <form onSubmit={handleCheckIn} className="w-full p-6 sm:p-8 bg-white border border-slate-200 rounded-3xl shadow-xs">
               <div className="mb-6">
-                <label className="block text-left text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                <label className="block text-left text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
                   ID Nhân Viên
                 </label>
                 <input
@@ -298,7 +298,7 @@ export default function CheckpointPage() {
                   value={staffId}
                   onChange={(e) => setStaffId(e.target.value)}
                   placeholder="Ví dụ: 1"
-                  className="w-full bg-black/50 border border-zinc-800 rounded-xl px-5 py-4 text-xl font-mono text-zinc-100 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all placeholder:text-zinc-700"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-5 py-4 text-xl font-mono text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-400 shadow-xs"
                   disabled={scanning}
                 />
               </div>
@@ -306,7 +306,7 @@ export default function CheckpointPage() {
               <button
                 type="submit"
                 disabled={scanning || !staffId}
-                className="w-full py-4 bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-500 hover:to-pink-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-violet-600/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-base shadow-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               >
                 {scanning ? 'Đang xử lý...' : (mode === 'face' ? 'Chấm Công Khuôn Mặt' : 'Chấm Công Thủ Công')}
               </button>
@@ -314,30 +314,30 @@ export default function CheckpointPage() {
 
             {/* Error Message */}
             {error && (
-              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start gap-3 text-left animate-in fade-in slide-in-from-bottom-2">
-                <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+              <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-3 text-left animate-in fade-in slide-in-from-bottom-2 shadow-xs">
+                <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-sm font-bold text-red-400">Lỗi</h4>
-                  <p className="text-sm text-red-400/80 mt-1">{error}</p>
+                  <h4 className="text-sm font-bold text-rose-800">Lỗi</h4>
+                  <p className="text-sm text-rose-700 mt-1">{error}</p>
                 </div>
               </div>
             )}
 
             {/* Success Result */}
             {result && !error && (
-              <div className="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-4 text-left animate-in fade-in slide-in-from-bottom-2">
-                <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+              <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-4 text-left animate-in fade-in slide-in-from-bottom-2 shadow-xs">
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-600" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-base font-bold text-emerald-400">Thành công!</h4>
-                  <div className="flex items-center justify-between mt-1 text-sm text-zinc-300">
+                  <h4 className="text-base font-bold text-emerald-800">Thành công!</h4>
+                  <div className="flex items-center justify-between mt-1 text-sm text-slate-600">
                     <span>Thời gian:</span>
-                    <span className="font-mono font-bold text-white">{new Date(result.checkInTime).toLocaleTimeString('vi-VN')}</span>
+                    <span className="font-mono font-bold text-slate-900">{new Date(result.checkInTime).toLocaleTimeString('vi-VN')}</span>
                   </div>
-                  <div className="flex items-center justify-between mt-1 text-sm text-zinc-300">
+                  <div className="flex items-center justify-between mt-1 text-sm text-slate-600">
                     <span>Trạng thái:</span>
-                    <span className="font-bold text-white">{result.status}</span>
+                    <span className="font-bold text-emerald-700">{result.status}</span>
                   </div>
                 </div>
               </div>

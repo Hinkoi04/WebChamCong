@@ -211,7 +211,6 @@ export default function OrgDashboardPage() {
   // Chart Data Preparation based on periodMode
   const chartData = useMemo(() => {
     if (periodMode === 'DAY') {
-      // Hourly distribution for the day (06:00 to 18:00)
       const hours = ['06h', '07h', '08h', '09h', '10h', '11h', '12h', '13h', '14h', '15h', '16h', '17h', '18h'];
       const counts = hours.map((h) => ({
         label: h,
@@ -312,7 +311,7 @@ export default function OrgDashboardPage() {
       });
     }
 
-    // CUSTOM: group by days in range
+    // CUSTOM
     const startD = new Date(customRange.start);
     const endD = new Date(customRange.end);
     const diffDays = Math.min(60, Math.max(1, Math.round((endD - startD) / (1000 * 60 * 60 * 24)) + 1));
@@ -414,7 +413,6 @@ export default function OrgDashboardPage() {
 
   // Activity list for display in table
   const displayedActivities = useMemo(() => {
-    // Map staff list with attendance
     return staffs
       .map((s) => {
         const att = attendances.find((a) => a.staffId === s.id && (periodMode === 'DAY' ? a.workDate === selectedDay : true));
@@ -450,19 +448,19 @@ export default function OrgDashboardPage() {
       {/* Header & Period Control Panel */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-zinc-100 flex items-center gap-2.5">
-            <Sparkles className="w-5 h-5 text-violet-400" />
+          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2.5">
+            <Sparkles className="w-5 h-5 text-indigo-600" />
             Tổng quan hệ thống
           </h2>
-          <p className="text-xs text-zinc-400 font-mono mt-1">
-            Báo cáo thống kê: <span className="text-violet-300 font-semibold">{periodLabel}</span>
+          <p className="text-xs text-slate-500 font-mono mt-1">
+            Báo cáo thống kê: <span className="text-indigo-600 font-semibold">{periodLabel}</span>
           </p>
         </div>
 
         {/* Filter Toolbar */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Period Mode Switcher */}
-          <div className="flex bg-zinc-900 border border-zinc-800 p-1 rounded-xl shadow-sm">
+          <div className="flex bg-slate-100 border border-slate-200 p-1 rounded-xl shadow-xs">
             {[
               { id: 'DAY', label: 'Ngày' },
               { id: 'WEEK', label: 'Tuần' },
@@ -478,8 +476,8 @@ export default function OrgDashboardPage() {
                 }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   periodMode === tab.id
-                    ? 'bg-violet-600 text-white shadow-md'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    ? 'bg-white text-indigo-700 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {tab.label}
@@ -489,13 +487,13 @@ export default function OrgDashboardPage() {
 
           {/* Dynamic Date Controls */}
           {periodMode === 'DAY' && (
-            <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-xl px-1.5 py-1">
+            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-1.5 py-1 shadow-xs">
               <button
                 onClick={() => {
                   handleNavPrev();
                   setCurrentPage(1);
                 }}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
                 title="Ngày trước"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -510,7 +508,7 @@ export default function OrgDashboardPage() {
                     setCurrentPage(1);
                   }
                 }}
-                className="bg-transparent border-none text-xs font-bold text-zinc-100 font-mono px-2 focus:outline-none cursor-pointer w-28 text-center"
+                className="bg-transparent border-none text-xs font-bold text-slate-800 font-mono px-2 focus:outline-none cursor-pointer w-28 text-center"
               />
               <button
                 onClick={() => {
@@ -518,7 +516,7 @@ export default function OrgDashboardPage() {
                   setCurrentPage(1);
                 }}
                 disabled={selectedDay >= todayStr}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                 title="Ngày sau"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -527,18 +525,18 @@ export default function OrgDashboardPage() {
           )}
 
           {periodMode === 'WEEK' && (
-            <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-xl px-1.5 py-1">
+            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-1.5 py-1 shadow-xs">
               <button
                 onClick={() => {
                   handleNavPrev();
                   setCurrentPage(1);
                 }}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
                 title="Tuần trước"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-xs font-bold text-zinc-100 font-mono px-3 text-center">
+              <span className="text-xs font-bold text-slate-800 font-mono px-3 text-center">
                 {periodLabel.replace('Tuần (', '').replace(')', '')}
               </span>
               <button
@@ -546,7 +544,7 @@ export default function OrgDashboardPage() {
                   handleNavNext();
                   setCurrentPage(1);
                 }}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
                 title="Tuần sau"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -555,13 +553,13 @@ export default function OrgDashboardPage() {
           )}
 
           {periodMode === 'MONTH' && (
-            <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-xl px-1.5 py-1">
+            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-1.5 py-1 shadow-xs">
               <button
                 onClick={() => {
                   handleNavPrev();
                   setCurrentPage(1);
                 }}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
                 title="Tháng trước"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -575,14 +573,14 @@ export default function OrgDashboardPage() {
                   setSelectedMonthYear({ year: y, month: m });
                   setCurrentPage(1);
                 }}
-                className="bg-transparent border-none text-xs font-bold text-zinc-100 font-mono px-2 focus:outline-none cursor-pointer w-28 text-center"
+                className="bg-transparent border-none text-xs font-bold text-slate-800 font-mono px-2 focus:outline-none cursor-pointer w-28 text-center"
               />
               <button
                 onClick={() => {
                   handleNavNext();
                   setCurrentPage(1);
                 }}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
                 title="Tháng sau"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -591,18 +589,18 @@ export default function OrgDashboardPage() {
           )}
 
           {periodMode === 'YEAR' && (
-            <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-xl px-1.5 py-1">
+            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-1.5 py-1 shadow-xs">
               <button
                 onClick={() => {
                   handleNavPrev();
                   setCurrentPage(1);
                 }}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
                 title="Năm trước"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-xs font-bold text-zinc-100 font-mono px-3 text-center">
+              <span className="text-xs font-bold text-slate-800 font-mono px-3 text-center">
                 Năm {selectedYear}
               </span>
               <button
@@ -611,7 +609,7 @@ export default function OrgDashboardPage() {
                   setCurrentPage(1);
                 }}
                 disabled={selectedYear >= today.getFullYear()}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                 title="Năm sau"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -620,7 +618,7 @@ export default function OrgDashboardPage() {
           )}
 
           {periodMode === 'CUSTOM' && (
-            <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-1.5">
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-xs">
               <input
                 type="date"
                 value={customRange.start}
@@ -628,9 +626,9 @@ export default function OrgDashboardPage() {
                   setCustomRange({ ...customRange, start: e.target.value });
                   setCurrentPage(1);
                 }}
-                className="bg-transparent border-none text-xs font-mono text-zinc-100 focus:outline-none cursor-pointer"
+                className="bg-transparent border-none text-xs font-mono text-slate-800 focus:outline-none cursor-pointer"
               />
-              <span className="text-zinc-500 text-xs">đến</span>
+              <span className="text-slate-400 text-xs">đến</span>
               <input
                 type="date"
                 value={customRange.end}
@@ -638,7 +636,7 @@ export default function OrgDashboardPage() {
                   setCustomRange({ ...customRange, end: e.target.value });
                   setCurrentPage(1);
                 }}
-                className="bg-transparent border-none text-xs font-mono text-zinc-100 focus:outline-none cursor-pointer"
+                className="bg-transparent border-none text-xs font-mono text-slate-800 focus:outline-none cursor-pointer"
               />
             </div>
           )}
@@ -649,10 +647,10 @@ export default function OrgDashboardPage() {
               fetchData();
               setCurrentPage(1);
             }}
-            className="w-9 h-9 flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
+            className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-slate-900 hover:border-slate-300 transition-colors cursor-pointer shadow-xs"
             title="Tải lại dữ liệu"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin text-violet-400" /> : <RefreshCw className="w-4 h-4" />}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin text-indigo-600" /> : <RefreshCw className="w-4 h-4" />}
           </button>
         </div>
       </div>
@@ -665,45 +663,45 @@ export default function OrgDashboardPage() {
             value: loading ? '...' : totalStaff,
             sub: `${faceRegisteredCount}/${totalStaff} đã có Face ID`,
             icon: Users,
-            color: 'text-blue-400',
-            bg: 'bg-blue-500/10'
+            color: 'text-blue-600',
+            bg: 'bg-blue-50 border-blue-100'
           },
           {
             label: periodMode === 'DAY' ? 'Có mặt trong ngày' : 'Tổng lượt có mặt',
             value: loading ? '...' : `${stats.presentCount} lượt`,
             sub: `${stats.attendanceRate}% tỷ lệ chuyên cần`,
             icon: UserCheck,
-            color: 'text-emerald-400',
-            bg: 'bg-emerald-500/10'
+            color: 'text-emerald-600',
+            bg: 'bg-emerald-50 border-emerald-100'
           },
           {
             label: 'Đi làm đúng giờ',
             value: loading ? '...' : `${stats.onTimeCount} lượt`,
             sub: `${stats.onTimeRate}% tỷ lệ đúng giờ`,
             icon: CheckCircle2,
-            color: 'text-violet-400',
-            bg: 'bg-violet-500/10'
+            color: 'text-indigo-600',
+            bg: 'bg-indigo-50 border-indigo-100'
           },
           {
             label: 'Đi muộn / Về sớm',
             value: loading ? '...' : `${stats.lateCount + stats.earlyCount} lượt`,
             sub: `${stats.lateCount} muộn · ${stats.earlyCount} về sớm`,
             icon: Clock,
-            color: 'text-amber-400',
-            bg: 'bg-amber-500/10'
+            color: 'text-amber-600',
+            bg: 'bg-amber-50 border-amber-100'
           }
         ].map((k, i) => (
           <div
             key={i}
-            className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 hover:border-violet-500/30 transition-all shadow-md group"
+            className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-indigo-300 hover:shadow-md transition-all shadow-xs group"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <div className="text-xs text-zinc-400 font-medium">{k.label}</div>
-                <div className="text-2xl font-bold text-zinc-100 mt-2 tracking-tight font-mono">{k.value}</div>
-                <div className="text-[11px] text-zinc-500 mt-1 font-mono truncate">{k.sub}</div>
+                <div className="text-xs text-slate-500 font-medium">{k.label}</div>
+                <div className="text-2xl font-bold text-slate-900 mt-2 tracking-tight font-mono">{k.value}</div>
+                <div className="text-[11px] text-slate-400 mt-1 font-mono truncate">{k.sub}</div>
               </div>
-              <div className={`w-10 h-10 rounded-xl ${k.bg} flex items-center justify-center flex-shrink-0 border border-white/[0.03]`}>
+              <div className={`w-10 h-10 rounded-xl ${k.bg} flex items-center justify-center flex-shrink-0 border`}>
                 <k.icon className={`w-5 h-5 ${k.color}`} />
               </div>
             </div>
@@ -714,29 +712,29 @@ export default function OrgDashboardPage() {
       {/* Main Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Attendance Trend Chart (Span 2) */}
-        <div className="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-md flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
-                <CalendarDays className="w-4 h-4 text-violet-400" />
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-indigo-600" />
                 Diễn biến chấm công ({periodMode === 'DAY' ? 'Theo khung giờ' : periodMode === 'WEEK' ? 'Theo ngày trong tuần' : periodMode === 'MONTH' ? 'Theo ngày trong tháng' : 'Theo các tháng'})
               </h3>
-              <p className="text-[11px] text-zinc-500 mt-0.5 font-mono">{periodLabel}</p>
+              <p className="text-[11px] text-slate-400 mt-0.5 font-mono">{periodLabel}</p>
             </div>
-            <div className="flex items-center gap-4 text-xs text-zinc-400">
+            <div className="flex items-center gap-4 text-xs text-slate-500">
               <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400 inline-block" /> Có mặt
+                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block" /> Có mặt
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-red-400 inline-block" /> Vắng mặt
+                <span className="w-2.5 h-2.5 rounded-sm bg-rose-500 inline-block" /> Vắng mặt
               </span>
             </div>
           </div>
 
           <div className="mt-4 flex-1 flex items-center">
             {loading ? (
-              <div className="w-full h-48 flex items-center justify-center text-xs text-zinc-500">
-                <Loader2 className="w-5 h-5 animate-spin text-violet-400 mr-2" />
+              <div className="w-full h-48 flex items-center justify-center text-xs text-slate-400">
+                <Loader2 className="w-5 h-5 animate-spin text-indigo-600 mr-2" />
                 Đang tải dữ liệu biểu đồ...
               </div>
             ) : (
@@ -748,31 +746,31 @@ export default function OrgDashboardPage() {
         {/* Status Distribution & Department Progress */}
         <div className="space-y-6">
           {/* Status Breakdown Card */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-md space-y-4">
-            <h3 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
-              <PieChart className="w-4 h-4 text-violet-400" />
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <PieChart className="w-4 h-4 text-indigo-600" />
               Cơ cấu trạng thái công
             </h3>
 
             <div className="space-y-2.5">
               {[
-                { label: 'Đúng giờ', count: stats.onTimeCount, color: 'bg-emerald-400', text: 'text-emerald-400' },
-                { label: 'Đi muộn', count: stats.lateCount, color: 'bg-amber-400', text: 'text-amber-400' },
-                { label: 'Về sớm', count: stats.earlyCount, color: 'bg-orange-400', text: 'text-orange-400' },
-                { label: 'Nghỉ phép', count: stats.leaveCount, color: 'bg-blue-400', text: 'text-blue-400' },
-                { label: 'Vắng mặt', count: stats.absentCount, color: 'bg-red-400', text: 'text-red-400' }
+                { label: 'Đúng giờ', count: stats.onTimeCount, color: 'bg-emerald-500', text: 'text-emerald-600' },
+                { label: 'Đi muộn', count: stats.lateCount, color: 'bg-amber-500', text: 'text-amber-600' },
+                { label: 'Về sớm', count: stats.earlyCount, color: 'bg-orange-500', text: 'text-orange-600' },
+                { label: 'Nghỉ phép', count: stats.leaveCount, color: 'bg-blue-500', text: 'text-blue-600' },
+                { label: 'Vắng mặt', count: stats.absentCount, color: 'bg-rose-500', text: 'text-rose-600' }
               ].map((item, idx) => {
                 const total = Math.max(1, stats.presentCount + stats.absentCount + stats.leaveCount);
                 const pct = Math.round((item.count / total) * 100);
                 return (
                   <div key={idx} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-300 font-medium">{item.label}</span>
+                      <span className="text-slate-700 font-medium">{item.label}</span>
                       <span className={`font-mono font-bold ${item.text}`}>
-                        {item.count} <span className="text-zinc-500 font-normal text-[10px]">({pct}%)</span>
+                        {item.count} <span className="text-slate-400 font-normal text-[10px]">({pct}%)</span>
                       </span>
                     </div>
-                    <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                       <div className={`h-full ${item.color} rounded-full`} style={{ width: `${pct}%` }} />
                     </div>
                   </div>
@@ -782,23 +780,23 @@ export default function OrgDashboardPage() {
           </div>
 
           {/* Department Breakdown Card */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-md space-y-3">
-            <h3 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-violet-400" />
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-indigo-600" />
               Thống kê theo phòng ban
             </h3>
 
-            <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+            <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
               {departmentStats.map((dept, i) => (
-                <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-zinc-950/60 border border-zinc-800/60 text-xs">
+                <div key={i} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs">
                   <div>
-                    <div className="font-semibold text-zinc-200">{dept.dept}</div>
-                    <div className="text-[10px] text-zinc-500 font-mono mt-0.5">{dept.total} nhân sự</div>
+                    <div className="font-semibold text-slate-800">{dept.dept}</div>
+                    <div className="text-[10px] text-slate-400 font-mono mt-0.5">{dept.total} nhân sự</div>
                   </div>
                   <div className="text-right">
-                    <span className="font-bold font-mono text-emerald-400">{dept.present} lượt</span>
+                    <span className="font-bold font-mono text-emerald-600">{dept.present} lượt</span>
                     {periodMode === 'DAY' && (
-                      <div className="text-[10px] text-zinc-400 font-mono">{dept.rate}% có mặt</div>
+                      <div className="text-[10px] text-slate-500 font-mono">{dept.rate}% có mặt</div>
                     )}
                   </div>
                 </div>
@@ -809,17 +807,17 @@ export default function OrgDashboardPage() {
       </div>
 
       {/* Activity Table in Selected Period */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-md">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-5 py-4 border-b border-zinc-800 bg-zinc-900/40 gap-3">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-5 py-4 border-b border-slate-200 bg-slate-50/50 gap-3">
           <div>
-            <h3 className="text-sm font-bold text-zinc-100">Chi tiết nhân sự ({periodLabel})</h3>
-            <p className="text-xs text-zinc-500 font-mono mt-0.5">{displayedActivities.length} kết quả</p>
+            <h3 className="text-sm font-bold text-slate-900">Chi tiết nhân sự ({periodLabel})</h3>
+            <p className="text-xs text-slate-400 font-mono mt-0.5">{displayedActivities.length} kết quả</p>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
             {/* Search */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Tìm nhân viên..."
@@ -828,7 +826,7 @@ export default function OrgDashboardPage() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="pl-8 pr-3 py-1.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 focus:outline-none focus:border-violet-500 w-44"
+                className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-indigo-500 w-44 shadow-xs"
               />
             </div>
 
@@ -839,7 +837,7 @@ export default function OrgDashboardPage() {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-violet-500 cursor-pointer"
+              className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer shadow-xs"
             >
               <option value="Tất cả">Tất cả trạng thái</option>
               <option value="Có mặt">Có mặt</option>
@@ -848,7 +846,7 @@ export default function OrgDashboardPage() {
 
             <button
               onClick={() => navigate('/org/attendance')}
-              className="text-xs text-violet-400 hover:text-violet-300 flex items-center gap-1 font-semibold transition-colors cursor-pointer"
+              className="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1 font-semibold transition-colors cursor-pointer"
             >
               Lịch sử chi tiết <ChevronRight className="w-3.5 h-3.5" />
             </button>
@@ -857,70 +855,70 @@ export default function OrgDashboardPage() {
 
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-8 text-center text-sm text-zinc-500 font-medium">Đang tải danh sách nhân sự...</div>
+            <div className="p-8 text-center text-sm text-slate-400 font-medium">Đang tải danh sách nhân sự...</div>
           ) : (
-            <table className="w-full text-sm text-zinc-300">
+            <table className="w-full text-sm text-slate-700">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-800/10">
+                <tr className="border-b border-slate-200 bg-slate-50/70 text-slate-500">
                   {['Nhân viên', 'Phòng ban', 'Check-in', 'Check-out', 'Trạng thái', 'Face ID'].map((h) => (
-                    <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 whitespace-nowrap">
+                    <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/40">
+              <tbody className="divide-y divide-slate-100">
                 {paginatedActivities.map((s) => (
-                  <tr key={s.id} className="hover:bg-zinc-800/10 transition-colors">
+                  <tr key={s.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-violet-600/15 flex items-center justify-center text-violet-400 font-mono text-xs font-semibold">
+                        <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 font-mono text-xs font-semibold">
                           {s.avatar}
                         </div>
                         <div>
-                          <div className="text-sm font-semibold text-zinc-200">{s.fullName}</div>
-                          <div className="text-[10px] text-zinc-500 font-mono mt-0.5">{s.staffCode}</div>
+                          <div className="text-sm font-semibold text-slate-800">{s.fullName}</div>
+                          <div className="text-[10px] text-slate-400 font-mono mt-0.5">{s.staffCode}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 text-xs text-zinc-400 font-medium">{s.department}</td>
-                    <td className="px-5 py-3.5 text-xs font-mono text-zinc-200">{s.checkin}</td>
-                    <td className="px-5 py-3.5 text-xs font-mono text-zinc-200">{s.checkout}</td>
+                    <td className="px-5 py-3.5 text-xs text-slate-600 font-medium">{s.department}</td>
+                    <td className="px-5 py-3.5 text-xs font-mono text-slate-800">{s.checkin}</td>
+                    <td className="px-5 py-3.5 text-xs font-mono text-slate-800">{s.checkout}</td>
                     <td className="px-5 py-3.5">
                       {s.status === 'ON_TIME' ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-400/10 text-emerald-400 border border-emerald-500/15">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                           Đúng giờ
                         </span>
                       ) : s.status === 'LATE' ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400/10 text-amber-400 border border-amber-500/15">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                           Đi muộn
                         </span>
                       ) : s.status === 'EARLY_LEAVE' ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-400/10 text-orange-400 border border-orange-500/15">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-200">
                           Về sớm
                         </span>
                       ) : s.status === 'LATE_AND_EARLY_LEAVE' ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-400/10 text-red-300 border border-red-400/15">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
                           Muộn & Sớm
                         </span>
                       ) : s.status === 'LEAVE' ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-400/10 text-blue-400 border border-blue-500/15">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
                           Nghỉ phép
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-400/10 text-zinc-400 border border-zinc-500/15">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
                           Vắng
                         </span>
                       )}
                     </td>
                     <td className="px-5 py-3.5">
                       {s.faceRegistered ? (
-                        <span className="flex items-center gap-1 text-xs text-violet-400 font-medium">
+                        <span className="flex items-center gap-1 text-xs text-indigo-600 font-medium">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Đã đăng ký
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1 text-xs text-amber-400 font-medium">
+                        <span className="flex items-center gap-1 text-xs text-amber-600 font-medium">
                           <AlertTriangle className="w-3.5 h-3.5" />
                           Chưa đăng ký
                         </span>
@@ -930,7 +928,7 @@ export default function OrgDashboardPage() {
                 ))}
                 {displayedActivities.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="p-8 text-center text-sm text-zinc-500 font-medium">
+                    <td colSpan="6" className="p-8 text-center text-sm text-slate-400 font-medium">
                       Không tìm thấy nhân viên nào phù hợp.
                     </td>
                   </tr>
