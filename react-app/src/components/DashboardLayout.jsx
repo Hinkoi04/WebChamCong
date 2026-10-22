@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Clock, DollarSign, Settings,
   Bell, Search, CheckCircle2, Building2, LogOut, Shield,
   ChevronDown, Scan, AlertTriangle, CalendarDays, Fingerprint, CalendarCheck,
-  Trash2, Menu, X, PanelLeftClose, PanelLeftOpen
+  Trash2, Menu, X, PanelLeftClose, PanelLeftOpen, Keyboard
 } from 'lucide-react';
 
 const orgNav = [
@@ -12,6 +12,7 @@ const orgNav = [
   { id: 'staff', icon: Users, label: 'Nhân viên', path: '/org/staff' },
   { id: 'departments', icon: Building2, label: 'Phòng ban', path: '/org/departments' },
   { id: 'schedule', icon: CalendarDays, label: 'Ca làm việc', path: '/org/schedule' },
+  { id: 'manual-attendance', icon: Keyboard, label: 'Chấm công thủ công', path: '/org/manual-attendance' },
   { id: 'auto-attendance', icon: Scan, label: 'Chấm công tự động', path: '/org/auto-attendance' },
   { id: 'attendance-management', icon: CalendarCheck, label: 'Quản lý chấm công', path: '/org/attendance-management' },
   { id: 'attendance', icon: Fingerprint, label: 'Lịch sử chấm công', path: '/org/attendance' },
@@ -33,6 +34,7 @@ const pageTitles = {
   staff: 'Nhân viên',
   departments: 'Quản lý phòng ban',
   schedule: 'Ca làm việc',
+  'manual-attendance': 'Chấm công thủ công',
   'auto-attendance': 'Chấm công tự động',
   'attendance-management': 'Quản lý chấm công theo tháng',
   attendance: 'Lịch sử chấm công',
