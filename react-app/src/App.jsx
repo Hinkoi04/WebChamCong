@@ -15,6 +15,7 @@ import OrgDepartmentsPage from './modules/staff/pages/OrgDepartmentsPage';
 import OrgAttendancePage from './modules/attendance/pages/OrgAttendancePage';
 import OrgAttendanceManagementPage from './modules/attendance/pages/OrgAttendanceManagementPage';
 import OrgAutoAttendancePage from './modules/attendance/pages/OrgAutoAttendancePage';
+import OrgManualAttendancePage from './modules/attendance/pages/OrgManualAttendancePage';
 import OrgSalaryPage from './modules/salary/pages/OrgSalaryPage';
 import OrgSettingsPage from './modules/settings/pages/OrgSettingsPage';
 import OrgTrashPage from './modules/staff/pages/OrgTrashPage';
@@ -47,6 +48,7 @@ function App() {
             <Route path="/org/staff" element={<OrgStaffPage />} />
             <Route path="/org/departments" element={<OrgDepartmentsPage />} />
             <Route path="/org/schedule" element={<SchedulePage />} />
+            <Route path="/org/manual-attendance" element={<OrgManualAttendancePage />} />
             <Route path="/org/auto-attendance" element={<OrgAutoAttendancePage />} />
             <Route path="/org/attendance-management" element={<OrgAttendanceManagementPage />} />
             <Route path="/org/attendance" element={<OrgAttendancePage />} />

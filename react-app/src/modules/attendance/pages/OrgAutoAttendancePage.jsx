@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { attendanceService } from '../services/attendanceService';
 import { staffService } from '../../staff/services/staffService';
 import {
   Camera, CameraOff, Sparkles, CheckCircle2, AlertTriangle,
   UserCheck, Clock, LogIn, LogOut, ScanFace, Keyboard,
-  RefreshCw, ShieldCheck, FlipHorizontal
+  RefreshCw, ShieldCheck, FlipHorizontal, ArrowRight
 } from 'lucide-react';
 import { useToast } from '../../../contexts/ToastContext';
 
@@ -43,6 +44,7 @@ function speakGreeting(name, isCheckOut = false) {
 }
 
 export default function OrgAutoAttendancePage() {
+  const navigate = useNavigate();
   // Action Type: 'CHECK_IN' or 'CHECK_OUT'
   const [actionType, setActionType] = useState('CHECK_IN');
   // Sub-mode: 'face' (Camera AI) or 'manual' (Thủ công)
@@ -301,15 +303,27 @@ export default function OrgAutoAttendancePage() {
           </p>
         </div>
 
-        {/* Digital Clock */}
-        <div className="flex items-center gap-3 px-4 py-2 bg-white border border-slate-200 rounded-2xl shadow-xs shrink-0">
-          <Clock className="w-5 h-5 text-indigo-600" />
-          <div className="font-mono text-right">
-            <div className="text-sm font-bold text-slate-900">
-              {currentTime.toLocaleTimeString('vi-VN', { hour12: false })}
-            </div>
-            <div className="text-[10px] text-slate-500">
-              {currentTime.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate('/org/manual-attendance')}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 text-xs font-semibold shadow-xs transition-all cursor-pointer"
+          >
+            <Keyboard className="w-4 h-4 text-indigo-600" />
+            <span>Chấm công thủ công</span>
+            <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+          </button>
+
+          {/* Digital Clock */}
+          <div className="flex items-center gap-3 px-4 py-2 bg-white border border-slate-200 rounded-2xl shadow-xs shrink-0">
+            <Clock className="w-5 h-5 text-indigo-600" />
+            <div className="font-mono text-right">
+              <div className="text-sm font-bold text-slate-900">
+                {currentTime.toLocaleTimeString('vi-VN', { hour12: false })}
+              </div>
+              <div className="text-[10px] text-slate-500">
+                {currentTime.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
+              </div>
             </div>
           </div>
         </div>
@@ -394,11 +408,9 @@ export default function OrgAutoAttendancePage() {
                 <ScanFace className="w-4 h-4 text-indigo-600" /> Quét khuôn mặt AI
               </button>
               <button
-                onClick={() => setMode('manual')}
-                className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-xs transition-all cursor-pointer ${mode === 'manual'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800'
-                  }`}
+                type="button"
+                onClick={() => navigate('/org/manual-attendance')}
+                className="flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-xs text-slate-500 hover:text-slate-800 transition-all cursor-pointer"
               >
                 <Keyboard className="w-4 h-4 text-indigo-600" /> Chấm công thủ công
               </button>
